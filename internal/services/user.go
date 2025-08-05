@@ -9,17 +9,17 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserService struct {
+type userService struct {
 	userRepo repositories.UserRepository
 }
 
-func NewUserService(userRepo repositories.UserRepository) *UserService {
-	return &UserService{
+func NewUserService(userRepo repositories.UserRepository) *userService {
+	return &userService{
 		userRepo: userRepo,
 	}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
 	if input.Username == "" {
 		return nil, fmt.Errorf("username cannot be empty")
 	}
