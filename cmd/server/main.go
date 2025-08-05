@@ -1,16 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/espennoreng/go-http-rental-server/internal/api"
 )
 
-func handler(w http.ResponseWriter, t *http.Request) {
-	fmt.Printf("Hello World")
-}
-
 func main() {
-	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	server := api.NewServer()
+
+	log.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", server); err != nil {
+		log.Fatalf("Could not start server: %v", err)
+	}
 }
