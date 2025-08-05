@@ -33,7 +33,7 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if errors.Is(err, services.ErrUserAlreadyExists) {
+		if errors.Is(err, services.ErrUserWithDuplicateDetailsExists) {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}

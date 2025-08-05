@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
@@ -21,10 +21,10 @@ func NewUserService(userRepo repositories.UserRepository) *userService {
 
 func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
 	if input.Username == "" {
-		return nil, fmt.Errorf("username cannot be empty")
+		return nil, ErrInvalidInput
 	}
 	if input.Email == "" {
-		return nil, fmt.Errorf("email cannot be empty")
+		return nil, ErrInvalidInput
 	}
 
 	newUser := models.User{
@@ -34,7 +34,10 @@ func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInp
 	}
 
 	if err := s.userRepo.Create(ctx, &newUser); err != nil {
-		return nil, fmt.Errorf("failed to create user: %w", err)
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return nil, ErrUserWithDuplicateDetailsExists
+		}
+		return nil, ErrInternalServer
 	}
 
 	return &newUser, nil
@@ -42,12 +45,15 @@ func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInp
 
 func (s *userService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	if id == "" {
-		return nil, fmt.Errorf("user ID cannot be empty")
+		return nil, ErrInvalidInput
 	}
 
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user by ID: %w", err)
+		if errors.Is(err, repositories.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, ErrInternalServer
 	}
 
 	return user, nil

@@ -114,10 +114,10 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		}
 	})
 
-	t.Run("service returns user already exists error", func(t *testing.T) {
+	t.Run("service returns user with duplicate details error", func(t *testing.T) {
 		mockService := &mockUserService{
 			createUserFunc: func(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
-				return nil, services.ErrUserAlreadyExists
+				return nil, services.ErrUserWithDuplicateDetailsExists
 			},
 		}
 

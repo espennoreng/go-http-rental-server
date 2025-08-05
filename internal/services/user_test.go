@@ -2,10 +2,11 @@ package services_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
+	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 )
 
@@ -68,18 +69,42 @@ func TestUserService_CreateUser(t *testing.T) {
 		}
 	})
 
-	t.Run("create user repository error", func(t *testing.T) {
+	t.Run("create user internal server error", func(t *testing.T) {
 		repo := &mockUserRepository{
 			createFunc: func(ctx context.Context, user *models.User) error {
-				return fmt.Errorf("repository error")
+				return repositories.ErrInternal
 			},
 		}
 
 		service := services.NewUserService(repo)
 
 		_, err := service.CreateUser(context.Background(), models.CreateUserInput{Username: "John Doe", Email: "john.doe@example.com"})
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
+		
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+
+		if !errors.Is(err, services.ErrInternalServer) {
+			t.Fatalf("expected %v, got %v", services.ErrInternalServer, err)
+		}
+	})
+
+	t.Run("create user already exists error", func(t *testing.T) {
+		repo := &mockUserRepository{
+			createFunc: func(ctx context.Context, user *models.User) error {
+				return repositories.ErrDuplicate
+			},
+		}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.CreateUser(context.Background(), models.CreateUserInput{Username: "John Doe", Email: "john.doe@example.com"})
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+
+		if !errors.Is(err, services.ErrUserWithDuplicateDetailsExists) {
+			t.Fatalf("expected %v, got %v", services.ErrUserWithDuplicateDetailsExists, err)
 		}
 	})
 
@@ -104,25 +129,54 @@ func TestUserService_GetUserByID(t *testing.T) {
 			t.Fatal("expected user ID to be set")
 		}
 	})
-}
 
-func TestUserService_GetUserByID_NotFound(t *testing.T) {
-	t.Run("get user by ID not found", func(t *testing.T) {
+	t.Run("get user by empty ID", func(t *testing.T) {
+		repo := &mockUserRepository{}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.GetUserByID(context.Background(), "")
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+	})
+
+	t.Run("get user by non-existent ID", func(t *testing.T) {
 		repo := &mockUserRepository{
 			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
-				return nil, nil // Simulate user not found
+				return nil, repositories.ErrNotFound
 			},
 		}
 
 		service := services.NewUserService(repo)
 
-		user, err := service.GetUserByID(context.Background(), "non-existent-id")
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
+		_, err := service.GetUserByID(context.Background(), "non-existent-id")
+		if err == nil {
+			t.Fatal("expected error, got none")
 		}
 
-		if user != nil {
-			t.Fatal("expected user to be nil for non-existent ID")
+		if !errors.Is(err, services.ErrUserNotFound) {
+			t.Fatalf("expected %v, got %v", services.ErrUserNotFound, err)
 		}
 	})
+
+	t.Run("get user by ID internal server error", func(t *testing.T) {
+		repo := &mockUserRepository{
+			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+				return nil, repositories.ErrInternal
+			},
+		}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.GetUserByID(context.Background(), "user-001")
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+
+		if !errors.Is(err, services.ErrInternalServer) {
+			t.Fatalf("expected %v, got %v", services.ErrInternalServer, err)
+		}
+	})
+
 }
