@@ -13,16 +13,16 @@ var _ repositories.UserRepository = (*UserRepository)(nil)
 
 type UserRepository struct {
 	mu    sync.RWMutex
-	users map[string]models.User
+	users map[string]*models.User
 }
 
 func NewUserRepository() *UserRepository {
 	return &UserRepository{
-		users: make(map[string]models.User),
+		users: make(map[string]*models.User),
 	}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user models.User) error {
+func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -34,13 +34,13 @@ func (r *UserRepository) Create(ctx context.Context, user models.User) error {
 	return nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id string) (models.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	user, exists := r.users[id]
 	if !exists {
-		return models.User{}, fmt.Errorf("user with ID %s not found", id)
+		return nil, fmt.Errorf("user with ID %s not found", id)
 	}
 
 	return user, nil

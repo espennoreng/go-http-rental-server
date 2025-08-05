@@ -17,7 +17,7 @@ func TestUserCreate(t *testing.T) {
 		Email:    "test@example.com",
 	}
 
-	err := repo.Create(context.Background(), user)
+	err := repo.Create(context.Background(), &user)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
