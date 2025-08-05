@@ -2,6 +2,7 @@ package services_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
@@ -44,8 +45,45 @@ func TestUserService_CreateUser(t *testing.T) {
 			t.Fatal("expected user ID to be set")
 		}
 	})
-}
 
+	t.Run("create user with empty username", func(t *testing.T) {
+		repo := &mockUserRepository{}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.CreateUser(context.Background(), models.CreateUserInput{Username: "", Email: "john.doe@example.com"})
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+	})
+
+	t.Run("create user with empty email", func(t *testing.T) {
+		repo := &mockUserRepository{}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.CreateUser(context.Background(), models.CreateUserInput{Username: "John Doe", Email: ""})
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+	})
+
+	t.Run("create user repository error", func(t *testing.T) {
+		repo := &mockUserRepository{
+			createFunc: func(ctx context.Context, user *models.User) error {
+				return fmt.Errorf("repository error")
+			},
+		}
+
+		service := services.NewUserService(repo)
+
+		_, err := service.CreateUser(context.Background(), models.CreateUserInput{Username: "John Doe", Email: "john.doe@example.com"})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+}
 
 func TestUserService_GetUserByID(t *testing.T) {
 	t.Run("get user by ID successfully", func(t *testing.T) {

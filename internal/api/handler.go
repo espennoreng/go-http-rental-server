@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
@@ -28,7 +29,15 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userService.CreateUser(r.Context(), input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, services.ErrInvalidInput) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, services.ErrUserAlreadyExists) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -38,21 +47,16 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	if id == "" {
-		http.Error(w, "User ID cannot be empty", http.StatusBadRequest)
-		return
-	}
 
 	user, err := h.userService.GetUserByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, services.ErrUserNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	if user == nil {
-		http.NotFound(w, r)
-		return
-	}
-
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }
