@@ -39,3 +39,17 @@ func TestUserCreate(t *testing.T) {
 		t.Errorf("expected user email %s, got %s", user.Email, retrievedUser.Email)
 	}
 }
+
+func TestUserGetByID_NotFound(t *testing.T) {
+	repo := inmemory.NewUserRepository()
+
+	_, err := repo.GetByID(context.Background(), "non-existent-id")
+	if err == nil {
+		t.Fatal("expected error for non-existent user, got nil")
+	}
+
+	expectedError := "user with ID non-existent-id not found"
+	if err.Error() != expectedError {
+		t.Errorf("expected error message '%s', got '%s'", expectedError, err.Error())
+	}
+}

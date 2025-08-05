@@ -39,3 +39,16 @@ func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInp
 
 	return &newUser, nil
 }
+
+func (s *userService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	if id == "" {
+		return nil, fmt.Errorf("user ID cannot be empty")
+	}
+
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by ID: %w", err)
+	}
+
+	return user, nil
+}

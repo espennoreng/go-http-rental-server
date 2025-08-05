@@ -45,3 +45,46 @@ func TestUserService_CreateUser(t *testing.T) {
 		}
 	})
 }
+
+
+func TestUserService_GetUserByID(t *testing.T) {
+	t.Run("get user by ID successfully", func(t *testing.T) {
+		repo := &mockUserRepository{
+			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+				return &models.User{ID: id, Username: "John Doe", Email: "john.doe@example.com"}, nil
+			},
+		}
+
+		service := services.NewUserService(repo)
+
+		user, err := service.GetUserByID(context.Background(), "user-001")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if user.ID == "" {
+			t.Fatal("expected user ID to be set")
+		}
+	})
+}
+
+func TestUserService_GetUserByID_NotFound(t *testing.T) {
+	t.Run("get user by ID not found", func(t *testing.T) {
+		repo := &mockUserRepository{
+			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+				return nil, nil // Simulate user not found
+			},
+		}
+
+		service := services.NewUserService(repo)
+
+		user, err := service.GetUserByID(context.Background(), "non-existent-id")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if user != nil {
+			t.Fatal("expected user to be nil for non-existent ID")
+		}
+	})
+}
