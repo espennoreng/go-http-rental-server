@@ -9,20 +9,20 @@ import (
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 )
 
-var _ repositories.UserRepository = (*UserRepository)(nil)
+var _ repositories.UserRepository = (*userRepository)(nil)
 
-type UserRepository struct {
+type userRepository struct {
 	mu    sync.RWMutex
 	users map[string]*models.User
 }
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{
+func NewUserRepository() *userRepository {
+	return &userRepository{
 		users: make(map[string]*models.User),
 	}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
+func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -34,7 +34,7 @@ func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

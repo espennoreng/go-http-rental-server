@@ -8,17 +8,17 @@ import (
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 )
 
-type UserHandler struct {
+type userHandler struct {
 	userService services.UserService
 }
 
-func NewUserHandler(userService services.UserService) *UserHandler {
-	return &UserHandler{
+func NewUserHandler(userService services.UserService) *userHandler {
+	return &userHandler{
 		userService: userService,
 	}
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
