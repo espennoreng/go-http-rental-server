@@ -3,6 +3,7 @@ package api_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,8 +49,24 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r.ServeHTTP(res, req)
 
-		if res.Code != http.StatusCreated {
-			t.Errorf("expected status %d, got %d", http.StatusCreated, res.Code)
+		api.AssertStatus(t, res, http.StatusCreated)
+		api.AssertJSONContentType(t, res)
+
+		var user models.User
+		if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
+			t.Fatalf("failed to decode response body: %v", err)
+		}
+
+		if user.ID != "user-001" {
+			t.Errorf("expected user ID 'user-001', got %s", user.ID)
+		}
+
+		if user.Username != "John Doe" {
+			t.Errorf("expected username 'John Doe', got %s", user.Username)
+		}
+
+		if user.Email != "john.doe@example.com" {
+			t.Errorf("expected email 'john.doe@example.com', got %s", user.Email)
 		}
 	})
 
@@ -65,9 +82,9 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r.ServeHTTP(res, req)
 
-		if res.Code != http.StatusBadRequest {
-			t.Errorf("expected status %d, got %d", http.StatusBadRequest, res.Code)
-		}
+		api.AssertStatus(t, res, http.StatusBadRequest)
+		api.AssertJSONContentType(t, res)
+		api.AssertJSONErrorBody(t, res, "Invalid request body")
 	})
 
 	t.Run("service returns validation error", func(t *testing.T) {
@@ -109,9 +126,9 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r.ServeHTTP(res, req)
 
-		if res.Code != http.StatusInternalServerError {
-			t.Errorf("expected status %d, got %d", http.StatusInternalServerError, res.Code)
-		}
+		api.AssertStatus(t, res, http.StatusInternalServerError)
+		api.AssertJSONContentType(t, res)
+		api.AssertJSONErrorBody(t, res, "internal server error")
 	})
 
 	t.Run("service returns user with duplicate details error", func(t *testing.T) {
@@ -131,9 +148,9 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r.ServeHTTP(res, req)
 
-		if res.Code != http.StatusConflict {
-			t.Errorf("expected status %d, got %d", http.StatusConflict, res.Code)
-		}
+		api.AssertStatus(t, res, http.StatusConflict)
+		api.AssertJSONContentType(t, res)
+		api.AssertJSONErrorBody(t, res, "user with duplicate details exists")
 	})
 }
 

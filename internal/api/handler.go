@@ -23,26 +23,25 @@ func NewUserHandler(userService services.UserService) *userHandler {
 func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	user, err := h.userService.CreateUser(r.Context(), input)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		if errors.Is(err, services.ErrUserWithDuplicateDetailsExists) {
-			http.Error(w, err.Error(), http.StatusConflict)
+			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	respondJSON(w, http.StatusCreated, user)
 }
 
 func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
@@ -51,12 +50,12 @@ func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userService.GetUserByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+
+	respondJSON(w, http.StatusOK, user)
 }
