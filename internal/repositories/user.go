@@ -12,6 +12,6 @@ type CreateUserParams struct {
 }
 
 type UserRepository interface {
-	Create(ctx context.Context, params *CreateUserParams) error
+	Create(ctx context.Context, params *CreateUserParams) (*models.User, error)
 	GetByID(ctx context.Context, id string) (*models.User, error)
 }

@@ -10,16 +10,17 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
+	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
 
 type mockUserService struct {
-	createUserFunc func(ctx context.Context, input models.CreateUserInput) (*models.User, error)
+	createUserFunc func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error)
 	getUserByIDFunc func(ctx context.Context, id string) (*models.User, error)
 }
 
-func (m *mockUserService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+func (m *mockUserService) CreateUser(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 	return m.createUserFunc(ctx, input)
 }
 
@@ -30,7 +31,7 @@ func (m *mockUserService) GetUserByID(ctx context.Context, id string) (*models.U
 func TestUserHandler_CreateUser(t *testing.T) {
 	t.Run("successful user creation", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 				return &models.User{
 					ID:       "user-001",
 					Username: input.Username,
@@ -89,7 +90,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns validation error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrInvalidInput
 			},
 		}
@@ -111,7 +112,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns internal server error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrInternalServer
 			},
 		}
@@ -133,7 +134,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns user with duplicate details error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrUserWithDuplicateDetailsExists
 			},
 		}
@@ -229,11 +230,11 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 
 type mockOrganizationService struct {
-	createOrganizationFunc func(ctx context.Context, input models.CreateOrganizationInput) (*models.Organization, error)
+	createOrganizationFunc func(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error)
 	getOrganizationByIDFunc func(ctx context.Context, id string) (*models.Organization, error)
 }
 
-func (m *mockOrganizationService) CreateOrganization(ctx context.Context, input models.CreateOrganizationInput) (*models.Organization, error) {
+func (m *mockOrganizationService) CreateOrganization(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error) {
 	return m.createOrganizationFunc(ctx, input)
 }
 
@@ -243,7 +244,7 @@ func (m *mockOrganizationService) GetOrganizationByID(ctx context.Context, id st
 
 func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 	mockService := &mockOrganizationService{
-		createOrganizationFunc: func(ctx context.Context, input models.CreateOrganizationInput) (*models.Organization, error) {
+		createOrganizationFunc: func(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error) {
 			return &models.Organization{
 				ID:   "org-001",
 				Name: input.Name,

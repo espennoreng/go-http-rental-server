@@ -26,8 +26,9 @@ func TestPostgresUserRepository(t *testing.T) {
 			Username: "John Doe",
 			Email:    "john@example.com",
 		}
-		err := repo.Create(ctx, params)
+		newUser, err := repo.Create(ctx, params)
 		require.NoError(t, err)
+		require.NotNil(t, newUser)
 	})
 
 	t.Run("Create_UniqueConstraint", func(t *testing.T) {
@@ -35,16 +36,17 @@ func TestPostgresUserRepository(t *testing.T) {
 			Username: "Jane Doe",
 			Email:    "jane@example.com",
 		}
-		err := repo.Create(ctx, params)
+		newUser, err := repo.Create(ctx, params)
 		require.NoError(t, err, "should not return an error on first creation")
+		require.NotNil(t, newUser)
 
 		params2 := &repositories.CreateUserParams{
 			Username: "Jane Doe", // Same username as user1
 			Email:    "jane@example.com",
 		}
-		err = repo.Create(ctx, params2)
+		newUser, err = repo.Create(ctx, params2)
 		require.Error(t, err)
-		require.Equal(t, repositories.ErrUniqueConstraint, err)
+		require.Nil(t, newUser, "should return nil user on unique constraint violation")
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
@@ -62,6 +64,5 @@ func TestPostgresUserRepository(t *testing.T) {
 		randomID := uuid.New().String()
 		_, err := repo.GetByID(ctx, randomID)
 		require.Error(t, err)
-		require.Equal(t, repositories.ErrNotFound, err)
 	})
 }

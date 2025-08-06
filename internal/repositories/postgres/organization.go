@@ -2,11 +2,9 @@ package postgres
 
 import (
 	"context"
-	"errors"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,19 +24,31 @@ func (r *organizationRepository) Create(ctx context.Context, params *repositorie
 	query := `
 		INSERT INTO organizations (name, created_by)
 		VALUES ($1, $2)
+		RETURNING id, name, created_by, created_at, updated_at
 	`
 
-	_, err := r.db.Exec(ctx, query, params.Name, params.CreatedBy)
+	var org models.Organization
+	err := r.db.QueryRow(ctx, query, params.Name, params.CreatedBy).Scan(&org.ID, &org.Name, &org.CreatedBy, &org.CreatedAt, &org.UpdatedAt)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
-			return nil, repositories.ErrUniqueConstraint
-		}
-		return nil, repositories.ErrInternal
+		return nil, err
 	}
-	return nil, nil
+
+	return &org, nil
 }
 
 func (r *organizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
-	return nil, nil // Implementation will go here
+	query := `
+		SELECT id, name, created_by, created_at, updated_at
+		FROM organizations
+		WHERE id = $1
+	`
+
+	row := r.db.QueryRow(ctx, query, id)
+
+	var org models.Organization
+	if err := row.Scan(&org.ID, &org.Name, &org.CreatedBy, &org.CreatedAt, &org.UpdatedAt); err != nil {
+		return nil, err
+	}
+
+	return &org, nil
 }

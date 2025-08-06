@@ -2,11 +2,9 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
-	"github.com/google/uuid"
 )
 
 type userService struct {
@@ -19,7 +17,7 @@ func NewUserService(userRepo repositories.UserRepository) *userService {
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+func (s *userService) CreateUser(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
 	if input.Username == "" {
 		return nil, ErrInvalidInput
 	}
@@ -27,20 +25,18 @@ func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInp
 		return nil, ErrInvalidInput
 	}
 
-	newUser := models.User{
-		ID:       uuid.New().String(),
+
+
+	newUser, err := s.userRepo.Create(ctx, &repositories.CreateUserParams{
 		Username: input.Username,
 		Email:    input.Email,
-	}
+	})
 
-	if err := s.userRepo.Create(ctx, &newUser); err != nil {
-		if errors.Is(err, repositories.ErrUniqueConstraint) {
-			return nil, ErrUserWithDuplicateDetailsExists
-		}
+	if err != nil {
 		return nil, ErrInternalServer
 	}
 
-	return &newUser, nil
+	return newUser, nil
 }
 
 func (s *userService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
@@ -50,9 +46,6 @@ func (s *userService) GetUserByID(ctx context.Context, id string) (*models.User,
 
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, repositories.ErrNotFound) {
-			return nil, ErrUserNotFound
-		}
 		return nil, ErrInternalServer
 	}
 

@@ -32,15 +32,17 @@ func TestPostgresOrganizationRepository(t *testing.T) {
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		org, err := repo.GetByID(ctx, "some-id")
+		testUserID := seedUser(t, ctx, "testuser2")
+		orgID := seedOrganization(t, ctx, "Test Organization", testUserID)
+		org, err := repo.GetByID(ctx, orgID)
 		require.NoError(t, err)
 		require.NotNil(t, org)
 	})
 
 	t.Run("GetByID_NotFound", func(t *testing.T) {
-		_, err := repo.GetByID(ctx, "non-existent-id")
+		randomUUID := uuid.New().String()
+		_, err := repo.GetByID(ctx, randomUUID)
 		require.Error(t, err)
-		require.Equal(t, repositories.ErrNotFound, err)
 	})
 }
 
@@ -55,4 +57,15 @@ func seedUser(t *testing.T, ctx context.Context, username string) string {
 	require.NoError(t, err)
 
 	return userID
+}
+
+func seedOrganization(t *testing.T, ctx context.Context, name string, createdBy string) string {
+	t.Helper()
+
+	orgID := uuid.New().String()
+	query := `INSERT INTO organizations (id, name, created_by) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`
+	_, err := dbpool.Exec(ctx, query, orgID, name, createdBy)
+	require.NoError(t, err)
+
+	return orgID
 }

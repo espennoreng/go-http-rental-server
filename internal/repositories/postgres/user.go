@@ -2,12 +2,9 @@ package postgres
 
 import (
 	"context"
-	"errors"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,29 +20,28 @@ func NewUserRepository(db *pgxpool.Pool) *userRepository {
 
 var _ repositories.UserRepository = (*userRepository)(nil)
 
-func (r *userRepository) Create(ctx context.Context, user *repositories.CreateUserParams) error {
+func (r *userRepository) Create(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error) {
 
 	query := `
 		INSERT INTO users (username, email)
 		VALUES ($1, $2)
+		RETURNING id, username, email, created_at, updated_at
 	`
 
-	_, err := r.db.Exec(ctx, query, user.Username, user.Email)
+	var newUser models.User
+	err := r.db.QueryRow(ctx, query, user.Username, user.Email).Scan(&newUser.ID, &newUser.Username, &newUser.Email, &newUser.CreatedAt, &newUser.UpdatedAt)
+	
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
-			return repositories.ErrUniqueConstraint
-		}
-		return repositories.ErrInternal
+		return nil, err
 	}
 
-	return nil
+	return &newUser, nil
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 
 	query := `
-		SELECT id, username, email
+		SELECT id, username, email, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -53,11 +49,8 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	row := r.db.QueryRow(ctx, query, id)
 
 	var user models.User
-	if err := row.Scan(&user.ID, &user.Username, &user.Email); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, repositories.ErrNotFound
-		}
-		return nil, repositories.ErrInternal
+	if err := row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		return nil, err
 	}
 
 	return &user, nil
