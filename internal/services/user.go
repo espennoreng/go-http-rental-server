@@ -34,7 +34,7 @@ func (s *userService) CreateUser(ctx context.Context, input models.CreateUserInp
 	}
 
 	if err := s.userRepo.Create(ctx, &newUser); err != nil {
-		if errors.Is(err, repositories.ErrDuplicate) {
+		if errors.Is(err, repositories.ErrUniqueConstraint) {
 			return nil, ErrUserWithDuplicateDetailsExists
 		}
 		return nil, ErrInternalServer

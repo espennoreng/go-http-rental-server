@@ -150,7 +150,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		api.AssertStatus(t, res, http.StatusConflict)
 		api.AssertJSONContentType(t, res)
-		api.AssertJSONErrorBody(t, res, "user with duplicate details exists")
+		api.AssertJSONErrorBody(t, res, "user with similar details already exists")
 	})
 }
 

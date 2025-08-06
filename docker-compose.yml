@@ -1,0 +1,26 @@
+# This file defines your development database service using Docker Compose.
+# Run `docker-compose up -d` in your terminal to start it.
+version: '3.8'
+
+services:
+  # This defines the postgres service
+  postgres:
+    image: postgres:15-alpine
+    container_name: rental-db-dev
+    environment:
+      # These variables configure the PostgreSQL instance.
+      # You will use these to build your DATABASE_URL.
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: rentaldb
+    ports:
+      # This maps port 5432 on your local machine to port 5432 inside the container,
+      # allowing your Go application to connect to it.
+      - "5432:5432"
+    volumes:
+      # This creates a persistent volume to store your database data,
+      # so it's not lost when you stop or restart the container.
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

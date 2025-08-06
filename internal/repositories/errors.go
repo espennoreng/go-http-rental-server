@@ -6,6 +6,6 @@ import (
 
 var (
 	ErrNotFound  = errors.New("resource not found")
-	ErrDuplicate = errors.New("duplicate resource")
+	ErrUniqueConstraint = errors.New("unique constraint violation")
 	ErrInternal  = errors.New("internal server error")
 )

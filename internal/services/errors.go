@@ -10,6 +10,6 @@ var (
 	ErrOrganizationNotFound = errors.New("organization not found")
 	ErrOrganizationWithDuplicateDetailsExists = errors.New("organization with duplicate details exists")
 	ErrInternalServer    = errors.New("internal server error")
-	ErrUserWithDuplicateDetailsExists = errors.New("user with duplicate details exists")
+	ErrUserWithDuplicateDetailsExists = errors.New("user with similar details already exists")
 	ErrDuplicateInput    = errors.New("duplicate input")
 )

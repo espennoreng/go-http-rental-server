@@ -92,7 +92,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	t.Run("create user already exists error", func(t *testing.T) {
 		repo := &mockUserRepository{
 			createFunc: func(ctx context.Context, user *models.User) error {
-				return repositories.ErrDuplicate
+				return repositories.ErrUniqueConstraint
 			},
 		}
 
