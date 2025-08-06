@@ -23,14 +23,14 @@ func NewUserRepository(db *pgxpool.Pool) *userRepository {
 
 var _ repositories.UserRepository = (*userRepository)(nil)
 
-func (r *userRepository) Create(ctx context.Context, user *models.User) error {
+func (r *userRepository) Create(ctx context.Context, user *repositories.CreateUserParams) error {
 
 	query := `
-		INSERT INTO users (id, username, email)
-		VALUES ($1, $2, $3)
+		INSERT INTO users (username, email)
+		VALUES ($1, $2)
 	`
 
-	_, err := r.db.Exec(ctx, query, user.ID, user.Username, user.Email)
+	_, err := r.db.Exec(ctx, query, user.Username, user.Email)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
