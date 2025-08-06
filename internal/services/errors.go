@@ -7,6 +7,8 @@ import (
 var (
 	ErrInvalidInput      = errors.New("invalid input")
 	ErrUserNotFound      = errors.New("user not found")
+	ErrOrganizationNotFound = errors.New("organization not found")
+	ErrOrganizationWithDuplicateDetailsExists = errors.New("organization with duplicate details exists")
 	ErrInternalServer    = errors.New("internal server error")
 	ErrUserWithDuplicateDetailsExists = errors.New("user with duplicate details exists")
 	ErrDuplicateInput    = errors.New("duplicate input")
