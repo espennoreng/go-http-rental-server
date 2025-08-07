@@ -26,10 +26,13 @@ func main() {
 
 	// 3. Set up dependencies (repositories, services)
 	userRepo := postgres.NewUserRepository(dbpool)
+	organizationRepo := postgres.NewOrganizationRepository(dbpool)
 	userService := services.NewUserService(userRepo)
+	organizationService := services.NewOrganizationService(organizationRepo)
+
 
 	// 4. Set up the HTTP server
-	server := api.NewServer(userService)
+	server := api.NewServer(userService, organizationService)
 
 	// 5. Start the server using the port from the config
 	addr := fmt.Sprintf(":%s", cfg.Port)

@@ -8,23 +8,23 @@ BINARY_NAME=rental-server
 DATABASE_URL="postgres://devuser:devpassword@localhost:5432/rentaldb?sslmode=disable"
 
 # Phony targets are targets that are not files.
-.PHONY: all run test clean db-up db-down db-logs migrate-up tidy
+.PHONY: all run test clean db-up db-down db-logs migrate-up tidy build
 
-all: run
+all: build run
 
 # ====================================================================================
 # Development Commands
 # ====================================================================================
 
 ## run: Builds and runs the application.
-run:
-	@echo "Building and running the application..."
-	@export DATABASE_URL=${DATABASE_URL} && go run ./cmd/server/main.go
+run: build
+	@echo "Running the application..."
+	@DATABASE_URL=${DATABASE_URL} ./$(BINARY_NAME)
 
 ## test: Runs all tests in the project.
 test:
 	@echo "Running tests..."
-	@go test ./...
+	@go test -v ./...
 
 ## tidy: Tidies up go.mod and go.sum files.
 tidy:
@@ -66,9 +66,9 @@ migrate-up:
 ## build: Compiles the application into a binary.
 build:
 	@echo "Building binary..."
-	@go build -o ${BINARY_NAME} ./cmd/server/main.go
+	@go build -o $(BINARY_NAME) ./cmd/server/main.go
 
 ## clean: Removes the built binary.
 clean:
 	@echo "Cleaning up..."
-	@rm -f ${BINARY_NAME}
+	@rm -f $(BINARY_NAME)

@@ -35,8 +35,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		user := repositories.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"}
-		createdUser, err := service.CreateUser(context.Background(), user)
+		createdUser, err := service.CreateUser(context.Background(), repositories.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}

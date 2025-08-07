@@ -7,8 +7,8 @@ import (
 )
 
 type CreateUserParams struct {
-	Username string
-	Email    string
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 type UserRepository interface {

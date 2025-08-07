@@ -14,8 +14,10 @@ type Server struct {
 
 func NewServer(
 	userService services.UserService,
+	organizationService services.OrganizationService,
 ) *Server {
 	userHandler := NewUserHandler(userService)
+	organizationHandler := NewOrganizationHandler(organizationService)
 
 	r := chi.NewRouter()
 
@@ -23,14 +25,14 @@ func NewServer(
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	setupRoutes(r, userHandler)
+	setupRoutes(r, userHandler, organizationHandler)
 
 	return &Server{
 		router: r,
 	}
 }
 
-func setupRoutes(r chi.Router, userHandler *userHandler) {
+func setupRoutes(r chi.Router, userHandler *userHandler, organizationHandler *organizationHandler) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to the Rental Server API"))
 	})
@@ -43,6 +45,14 @@ func setupRoutes(r chi.Router, userHandler *userHandler) {
 		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			userHandler.GetUserByID(w, r)
 		})
+	})
+
+	r.Route("/organizations", func(r chi.Router) {
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			organizationHandler.CreateOrganization(w, r)
+		})
+
+	
 	})
 }
 

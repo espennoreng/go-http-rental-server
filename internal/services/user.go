@@ -25,8 +25,6 @@ func (s *userService) CreateUser(ctx context.Context, input repositories.CreateU
 		return nil, ErrInvalidInput
 	}
 
-
-
 	newUser, err := s.userRepo.Create(ctx, &repositories.CreateUserParams{
 		Username: input.Username,
 		Email:    input.Email,
