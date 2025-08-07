@@ -8,19 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type userRepository struct {
+type UserRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool) *userRepository {
-	return &userRepository{
+func NewUserRepository(db *pgxpool.Pool) *UserRepository {
+	return &UserRepository{
 		db: db,
 	}
 }
 
-var _ repositories.UserRepository = (*userRepository)(nil)
+var _ repositories.UserRepository = (*UserRepository)(nil)
 
-func (r *userRepository) Create(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error) {
+func (r *UserRepository) Create(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error) {
 
 	query := `
 		INSERT INTO users (username, email)
@@ -38,7 +38,7 @@ func (r *userRepository) Create(ctx context.Context, user *repositories.CreateUs
 	return &newUser, nil
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 
 	query := `
 		SELECT id, username, email, created_at, updated_at

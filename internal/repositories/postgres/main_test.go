@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
+	repoPostgres "github.com/espennoreng/go-http-rental-server/internal/repositories/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -68,4 +70,30 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	os.Exit(code)
+}
+
+type TestHelper struct {
+	dbpool *pgxpool.Pool
+	orgRepo *repoPostgres.OrganizationRepository
+	userRepo *repoPostgres.UserRepository
+}
+
+func SetupTestHelper(t *testing.T) *TestHelper {
+	ctx := context.Background()
+	_, err := dbpool.Exec(ctx, "TRUNCATE organizations RESTART IDENTITY CASCADE")
+	require.NoError(t, err)
+
+	return &TestHelper{
+		dbpool: dbpool,
+		orgRepo: repoPostgres.NewOrganizationRepository(dbpool),
+		userRepo: repoPostgres.NewUserRepository(dbpool),
+	}
+}
+
+func (th *TestHelper) ResetDB(t *testing.T) {
+	ctx := context.Background()
+	_, err := th.dbpool.Exec(ctx, "TRUNCATE organizations RESTART IDENTITY CASCADE")
+	require.NoError(t, err)
+	_, err = th.dbpool.Exec(ctx, "TRUNCATE users RESTART IDENTITY CASCADE")
+	require.NoError(t, err)
 }

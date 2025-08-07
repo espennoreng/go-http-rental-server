@@ -8,19 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type organizationRepository struct {
+type OrganizationRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewOrganizationRepository(db *pgxpool.Pool) *organizationRepository {
-	return &organizationRepository{
+func NewOrganizationRepository(db *pgxpool.Pool) *OrganizationRepository {
+	return &OrganizationRepository{
 		db: db,
 	}
 }
 
-var _ repositories.OrganizationRepository = (*organizationRepository)(nil)
+var _ repositories.OrganizationRepository = (*OrganizationRepository)(nil)
 
-func (r *organizationRepository) Create(ctx context.Context, params *repositories.CreateOrganizationParams) (*models.Organization, error) {
+func (r *OrganizationRepository) Create(ctx context.Context, params *repositories.CreateOrganizationParams) (*models.Organization, error) {
 	query := `
 		INSERT INTO organizations (name, created_by)
 		VALUES ($1, $2)
@@ -36,7 +36,7 @@ func (r *organizationRepository) Create(ctx context.Context, params *repositorie
 	return &org, nil
 }
 
-func (r *organizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
+func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
 	query := `
 		SELECT id, name, created_by, created_at, updated_at
 		FROM organizations
