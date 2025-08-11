@@ -73,9 +73,10 @@ func TestMain(m *testing.M) {
 }
 
 type TestHelper struct {
-	dbpool *pgxpool.Pool
-	orgRepo *repoPostgres.OrganizationRepository
+	dbpool   *pgxpool.Pool
+	orgRepo  *repoPostgres.OrganizationRepository
 	userRepo *repoPostgres.UserRepository
+	orgUserRepo *repoPostgres.OrganizationUserRepository
 }
 
 func SetupTestHelper(t *testing.T) *TestHelper {
@@ -87,6 +88,7 @@ func SetupTestHelper(t *testing.T) *TestHelper {
 		dbpool: dbpool,
 		orgRepo: repoPostgres.NewOrganizationRepository(dbpool),
 		userRepo: repoPostgres.NewUserRepository(dbpool),
+		orgUserRepo: repoPostgres.NewOrganizationUserRepository(dbpool),
 	}
 }
 

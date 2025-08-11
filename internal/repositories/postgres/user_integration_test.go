@@ -65,7 +65,7 @@ func TestPostgresUserRepository(t *testing.T) {
 
 	t.Run("GetByID_NotFound", func(t *testing.T) {
 		th.ResetDB(t)
-		
+
 		randomID := uuid.New().String()
 		_, err := th.userRepo.GetByID(ctx, randomID)
 		require.Error(t, err)
