@@ -8,7 +8,8 @@ import (
 
 type OrganizationUserRepository interface {
 	Create(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error)
-	GetByOrganizationID(ctx context.Context, orgID string) ([]*models.User, error)
-	GetByUserID(ctx context.Context, userID string) ([]*models.Organization, error)
+	GetUsersByOrganizationID(ctx context.Context, orgID string) ([]*models.UserWithRole, error)
+	GetOrganizationsByUserID(ctx context.Context, userID string) ([]*models.Organization, error)
 	Delete(ctx context.Context, orgID string, userID string) error
+	UpdateRole(ctx context.Context, orgID string, userID string, newRole models.Role) error
 }

@@ -37,9 +37,9 @@ func (r *OrganizationUserRepository) Create(ctx context.Context, orgID string, u
 	return &orgUser, nil
 }
 
-func (r *OrganizationUserRepository) GetByOrganizationID(ctx context.Context, orgID string) ([]*models.User, error) {
+func (r *OrganizationUserRepository) GetUsersByOrganizationID(ctx context.Context, orgID string) ([]*models.UserWithRole, error) {
 	query := `
-		SELECT u.id, u.username, u.email, u.created_at, u.updated_at
+		SELECT u.id, u.username, u.email, u.created_at, u.updated_at, ou.role
 		FROM users u
 		JOIN organization_users ou ON ou.user_id = u.id
 		WHERE ou.organization_id = $1
@@ -51,19 +51,22 @@ func (r *OrganizationUserRepository) GetByOrganizationID(ctx context.Context, or
 	}
 	defer rows.Close()
 
-	users := make([]*models.User, 0)
+	orgUsersWithRole := make([]*models.UserWithRole, 0)
 	for rows.Next() {
-		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		var orgUser models.UserWithRole
+		if err := rows.Scan(&orgUser.User.ID, &orgUser.User.Username, &orgUser.User.Email, &orgUser.User.CreatedAt, &orgUser.User.UpdatedAt, &orgUser.Role); err != nil {
 			return nil, err
 		}
-		users = append(users, &user)
+		orgUsersWithRole = append(orgUsersWithRole, &orgUser)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
-	return users, nil
+	return orgUsersWithRole, nil
 }
 
-func (r *OrganizationUserRepository) GetByUserID(ctx context.Context, userID string) ([]*models.Organization, error) {
+func (r *OrganizationUserRepository) GetOrganizationsByUserID(ctx context.Context, userID string) ([]*models.Organization, error) {
 	query := `
 		SELECT o.id, o.name, o.created_by, o.created_at, o.updated_at
 		FROM organizations o
@@ -96,6 +99,21 @@ func (r *OrganizationUserRepository) Delete(ctx context.Context, orgID string, u
 	`
 
 	_, err := r.db.Exec(ctx, query, orgID, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OrganizationUserRepository) UpdateRole(ctx context.Context, orgID string, userID string, role models.Role) error {
+	query := `
+		UPDATE organization_users
+		SET role = $1
+		WHERE organization_id = $2 AND user_id = $3
+	`
+
+	_, err := r.db.Exec(ctx, query, role, orgID, userID)
 	if err != nil {
 		return err
 	}
