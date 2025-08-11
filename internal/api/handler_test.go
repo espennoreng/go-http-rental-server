@@ -367,25 +367,25 @@ func TestAccessHandler_IsMember(t *testing.T) {
 }
 
 type mockOrganizationUserService struct {
-	createOrganizationUserFunc func(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error)
-	getUsersByOrganizationIDFunc func(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error)
-	updateUserRoleFunc                func(ctx context.Context, orgID, userID string, role models.Role) error
-	deleteUserFromOrganizationFunc func(ctx context.Context, orgID, userID, userIDToDelete string) error
+	createOrganizationUserFunc func(ctx context.Context, params services.CreateOrganizationUserParams) (*models.OrganizationUser, error)
+	getUsersByOrganizationIDFunc func(ctx context.Context, params services.GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error)
+	updateUserRoleFunc                func(ctx context.Context, params services.UpdateUserRoleParams) error
+	deleteUserFromOrganizationFunc func(ctx context.Context, params services.DeleteOrganizationUserParams) error
 }
 
-func (m *mockOrganizationUserService) CreateOrganizationUser(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
-	return m.createOrganizationUserFunc(params)
+func (m *mockOrganizationUserService) CreateOrganizationUser(ctx context.Context, params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+	return m.createOrganizationUserFunc(ctx, params)
 }
 
-func (m *mockOrganizationUserService) GetUsersByOrganizationID(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error) {
-	return m.getUsersByOrganizationIDFunc(ctx, orgID, userID)
+func (m *mockOrganizationUserService) GetUsersByOrganizationID(ctx context.Context, params services.GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
+	return m.getUsersByOrganizationIDFunc(ctx, params)
 }
 
-func (m *mockOrganizationUserService) UpdateUserRole(ctx context.Context, orgID, userID string, role models.Role) error {
-	return m.updateUserRoleFunc(ctx, orgID, userID, role)
+func (m *mockOrganizationUserService) UpdateUserRole(ctx context.Context, params services.UpdateUserRoleParams) error {
+	return m.updateUserRoleFunc(ctx, params)
 }
-func (m *mockOrganizationUserService) DeleteUserFromOrganization(ctx context.Context, orgID, userID, userIDToDelete string) error {
-	return m.deleteUserFromOrganizationFunc(ctx, orgID, userID, userIDToDelete)
+func (m *mockOrganizationUserService) DeleteUserFromOrganization(ctx context.Context, params services.DeleteOrganizationUserParams) error {
+	return m.deleteUserFromOrganizationFunc(ctx, params)
 }
 
 func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
@@ -396,7 +396,21 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 	const role = models.RoleMember
 
 	mockService := &mockOrganizationUserService{
-		createOrganizationUserFunc: func(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+		createOrganizationUserFunc: func(ctx context.Context, params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
+			}
+			if params.ActingUserID != actingUserID {
+				t.Errorf("expected actingUserID %s, got %s", actingUserID, params.ActingUserID)
+			}
+			if params.UserID != userID {
+				t.Errorf("expected userID %s, got %s", userID, params.UserID)
+			}
+			if params.Role != role {
+				t.Errorf("expected role %s, got %s", role, params.Role)
+			}
+			// Simulating a successful creation of an organization user
 			return &models.OrganizationUser{
 				ID:     "org-user-001",
 				OrgID:  params.OrgID,
@@ -430,12 +444,19 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 	const userID = "user-001"
 
 	mockService := &mockOrganizationUserService{
-		getUsersByOrganizationIDFunc: func(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error) {
+		getUsersByOrganizationIDFunc: func(ctx context.Context, params services.GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
+			}
+			if params.ActingUserID != userID {
+				t.Errorf("expected actingUserID %s, got %s", userID, params.ActingUserID)
+			}
+			// Simulating a successful response with one user
 			return []*models.UserWithRole{
 				{User: models.User{
-					ID: "user-001",
-					Username: "John Doe", 
-					Email: "john.doe@example.com", 
+					ID:       "user-001",
+					Username: "John Doe",
+					Email:    "john.doe@example.com",
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}, Role: models.RoleMember},
@@ -467,16 +488,17 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 	const orgID = "org-001"
 
 	mockService := &mockOrganizationUserService{
-		deleteUserFromOrganizationFunc: func(ctx context.Context, reqActingUserID, reqOrgID, reqUserIDToDelete string) error {
-			if orgID != reqOrgID {
-				t.Errorf("expected orgID %s, got %s", orgID, reqOrgID)
+		deleteUserFromOrganizationFunc: func(ctx context.Context, params services.DeleteOrganizationUserParams) error {
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
 			}
-			if actingUserID != reqActingUserID {
-				t.Errorf("expected userID %s, got %s", actingUserID, reqActingUserID)
+			if params.ActingUserID != actingUserID {
+				t.Errorf("expected actingUserID %s, got %s", actingUserID, params.ActingUserID)
 			}
-			if userToDeleteID != reqUserIDToDelete {
-				t.Errorf("expected userIDToDelete %s, got %s", userToDeleteID, reqUserIDToDelete)
+			if params.UserIDToDelete != userToDeleteID {
+				t.Errorf("expected userIDToDelete %s, got %s", userToDeleteID, params.UserIDToDelete)
 			}
+			// Simulating a successful deletion
 			return nil
 		},
 	}

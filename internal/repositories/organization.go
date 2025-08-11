@@ -7,8 +7,8 @@ import (
 )
 
 type CreateOrganizationParams struct {
-	Name      string  `json:"name"`
-	CreatedBy string  `json:"created_by"`
+	Name      string `json:"name"`
+	CreatedBy string `json:"created_by"`
 }
 
 type OrganizationRepository interface {

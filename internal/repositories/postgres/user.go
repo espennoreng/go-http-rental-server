@@ -30,7 +30,7 @@ func (r *UserRepository) Create(ctx context.Context, user *repositories.CreateUs
 
 	var newUser models.User
 	err := r.db.QueryRow(ctx, query, user.Username, user.Email).Scan(&newUser.ID, &newUser.Username, &newUser.Email, &newUser.CreatedAt, &newUser.UpdatedAt)
-	
+
 	if err != nil {
 		return nil, err
 	}

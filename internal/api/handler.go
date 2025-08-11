@@ -1,11 +1,13 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/espennoreng/go-http-rental-server/internal/middleware"
+	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
@@ -159,25 +161,30 @@ func NewOrganizationUserHandler(organizationUserService services.OrganizationUse
 
 func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.GetUserIDFromContext(r.Context())
+
+	orgID := chi.URLParam(r, "orgID")
+
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
 	}
 
-	var input repositories.CreateOrganizationUserParams
+	var input struct {
+		UserID string      `json:"user_id"`
+		Role   models.Role `json:"role"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(services.CreateOrganizationUserParams{
-		Ctx:          r.Context(),
+	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(context.Background(), services.CreateOrganizationUserParams{
 		ActingUserID: userID,
-		OrgID:       input.OrgID,
-		UserID:      input.UserID,
-		Role:       input.Role,
+		OrgID:        orgID,
+		UserID:       input.UserID,
+		Role:         input.Role,
 	})
-	
+
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
@@ -198,7 +205,11 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 	}
 	orgID := chi.URLParam(r, "orgID")
 
-	users, err := h.organizationUserService.GetUsersByOrganizationID(r.Context(), orgID, userID)
+	users, err := h.organizationUserService.GetUsersByOrganizationID(context.Background(), services.GetUsersByOrganizationIDParams{
+		OrgID:        orgID,
+		ActingUserID: userID,
+	})
+
 	if err != nil {
 		if errors.Is(err, services.ErrUnauthorized) {
 			respondError(w, http.StatusForbidden, err.Error())
@@ -226,7 +237,13 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := h.organizationUserService.UpdateUserRole(r.Context(), orgID, userID, input.NewRole); err != nil {
+	err = h.organizationUserService.UpdateUserRole(context.Background(), services.UpdateUserRoleParams{
+		OrgID:        orgID,
+		ActingUserID: userID,
+		NewRole:      input.NewRole,
+	})
+
+	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
@@ -247,7 +264,13 @@ func (h *organizationUserHandler) DeleteUserFromOrganization(w http.ResponseWrit
 	orgID := chi.URLParam(r, "orgID")
 	userIDToDelete := chi.URLParam(r, "userID")
 
-	if err := h.organizationUserService.DeleteUserFromOrganization(r.Context(), userID, orgID, userIDToDelete); err != nil {
+	err = h.organizationUserService.DeleteUserFromOrganization(context.Background(), services.DeleteOrganizationUserParams{
+		ActingUserID:   userID,
+		OrgID:          orgID,
+		UserIDToDelete: userIDToDelete,
+	})
+
+	if err != nil {
 		if errors.Is(err, services.ErrUnauthorized) {
 			respondError(w, http.StatusForbidden, err.Error())
 			return

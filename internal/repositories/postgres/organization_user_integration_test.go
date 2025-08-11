@@ -311,5 +311,5 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, orgUserRetrieved, "should return nil for non-existent organization user")
 	})
-	
+
 }

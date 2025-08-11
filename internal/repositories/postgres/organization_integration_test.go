@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-
 func TestPostgresOrganizationRepository(t *testing.T) {
 	th := SetupTestHelper(t)
 	ctx := context.Background()
@@ -85,4 +83,4 @@ func TestPostgresOrganizationRepository(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, org2)
 	})
-} 
+}

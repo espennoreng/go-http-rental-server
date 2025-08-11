@@ -13,7 +13,6 @@ func TestPostgresUserRepository(t *testing.T) {
 	th := SetupTestHelper(t)
 	ctx := context.Background()
 
-
 	t.Run("Create", func(t *testing.T) {
 		th.ResetDB(t)
 

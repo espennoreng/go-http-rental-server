@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-
 type Server struct {
 	router chi.Router
 }
@@ -37,15 +36,14 @@ func NewServer(
 		router: r,
 	}
 }
-  
 
 func setupRoutes(
 	r chi.Router,
-	 userHandler *userHandler,
-	 organizationHandler *organizationHandler,
-	 organizationUserHandler *organizationUserHandler,
-	 accessHandler *accessHandler,
-	) {
+	userHandler *userHandler,
+	organizationHandler *organizationHandler,
+	organizationUserHandler *organizationUserHandler,
+	accessHandler *accessHandler,
+) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to the Rental Server API"))
 	})

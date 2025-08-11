@@ -7,9 +7,9 @@ import (
 )
 
 type CreateOrganizationUserParams struct {
-	OrgID  string `json:"org_id"`
-	UserID string `json:"user_id"`
-	Role   models.Role   `json:"role"`
+	OrgID  string      `json:"org_id"`
+	UserID string      `json:"user_id"`
+	Role   models.Role `json:"role"`
 }
 
 type UpdateUserRoleParams struct {
