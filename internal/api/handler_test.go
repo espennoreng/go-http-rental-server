@@ -367,14 +367,14 @@ func TestAccessHandler_IsMember(t *testing.T) {
 }
 
 type mockOrganizationUserService struct {
-	createOrganizationUserFunc func(ctx context.Context, orgID string, params repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error)
+	createOrganizationUserFunc func(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error)
 	getUsersByOrganizationIDFunc func(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error)
 	updateUserRoleFunc                func(ctx context.Context, orgID, userID string, role models.Role) error
 	deleteUserFromOrganizationFunc func(ctx context.Context, orgID, userID, userIDToDelete string) error
 }
 
-func (m *mockOrganizationUserService) CreateOrganizationUser(ctx context.Context, orgID string, params repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
-	return m.createOrganizationUserFunc(ctx, orgID, params)
+func (m *mockOrganizationUserService) CreateOrganizationUser(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+	return m.createOrganizationUserFunc(params)
 }
 
 func (m *mockOrganizationUserService) GetUsersByOrganizationID(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error) {
@@ -388,12 +388,18 @@ func (m *mockOrganizationUserService) DeleteUserFromOrganization(ctx context.Con
 	return m.deleteUserFromOrganizationFunc(ctx, orgID, userID, userIDToDelete)
 }
 
-func TestOrganizationUserHandler_CreateOrganizationUser(t *testing.T) {
+func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
+	// Define the user performing the action
+	const actingUserID = "admin-user-007"
+	const userID = "member-user-001"
+	const orgID = "org-001"
+	const role = models.RoleMember
+
 	mockService := &mockOrganizationUserService{
-		createOrganizationUserFunc: func(ctx context.Context, orgID string, params repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+		createOrganizationUserFunc: func(params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
 			return &models.OrganizationUser{
 				ID:     "org-user-001",
-				OrgID:  orgID,
+				OrgID:  params.OrgID,
 				UserID: params.UserID,
 				Role:   params.Role,
 			}, nil
@@ -402,10 +408,13 @@ func TestOrganizationUserHandler_CreateOrganizationUser(t *testing.T) {
 
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
-	r.Post("/organizations/{orgID}/users", handler.AddUserToOrganization)
 
-	reqBody := `{"user_id": "user-001", "role": "member"}`
-	req := httptest.NewRequest(http.MethodPost, "/organizations/org-001/users", bytes.NewBufferString(reqBody))
+	authedHandler := testAuthMiddleware(http.HandlerFunc(handler.AddUserToOrganization), actingUserID)
+
+	r.Method(http.MethodPost, "/organizations/{orgID}/users", authedHandler)
+
+	reqBody := fmt.Sprintf(`{"user_id": "%s", "role": "%s"}`, userID, role)
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/organizations/%s/users", orgID), bytes.NewBufferString(reqBody))
 	res := httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
@@ -416,11 +425,15 @@ func TestOrganizationUserHandler_CreateOrganizationUser(t *testing.T) {
 }
 
 func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
+	// Define the organization ID and user ID for the request
+	const orgID = "org-001"
+	const userID = "user-001"
+
 	mockService := &mockOrganizationUserService{
 		getUsersByOrganizationIDFunc: func(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error) {
 			return []*models.UserWithRole{
 				{User: models.User{
-					ID: "user-001", 
+					ID: "user-001",
 					Username: "John Doe", 
 					Email: "john.doe@example.com", 
 					CreatedAt: time.Now(),
@@ -432,9 +445,12 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
-	r.Get("/organizations/{orgID}/users", handler.GetUsersByOrganizationID)
 
-	req := httptest.NewRequest(http.MethodGet, "/organizations/org-001/users", nil)
+	authedHandler := testAuthMiddleware(http.HandlerFunc(handler.GetUsersByOrganizationID), userID)
+
+	r.Method(http.MethodGet, "/organizations/{orgID}/users", authedHandler)
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/organizations/%s/users", orgID), nil)
 	res := httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)

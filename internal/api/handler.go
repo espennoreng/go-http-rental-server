@@ -170,7 +170,14 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 		return
 	}
 
-	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(r.Context(), userID, input)
+	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(services.CreateOrganizationUserParams{
+		Ctx:          r.Context(),
+		ActingUserID: userID,
+		OrgID:       input.OrgID,
+		UserID:      input.UserID,
+		Role:       input.Role,
+	})
+	
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())

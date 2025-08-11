@@ -23,25 +23,27 @@ func NewOrganizationUserService(orgUserRepo repositories.OrganizationUserReposit
 
 var _ OrganizationUserService = (*organizationUserService)(nil)
 
+
+
 // CreateOrganizationUser handles the creation of a new organization-user relationship.
-func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, userID string, input repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
-	if _, err := s.access.IsAdmin(ctx, input.OrgID, userID); err != nil {
+func (s *organizationUserService) CreateOrganizationUser(params CreateOrganizationUserParams) (*models.OrganizationUser, error) {
+	if _, err := s.access.IsAdmin(params.Ctx, params.OrgID, params.ActingUserID); err != nil {
 		return nil, err
 	}
 
-	if !models.ValidRoles[input.Role] {
+	if !models.ValidRoles[params.Role] {
 		return nil, ErrInvalidInput
 	}
 
 	// orgID is validated in IsAdmin, so we can assume it's valid here
-	if err := uuid.Validate(input.UserID); err != nil || input.UserID == "" {
+	if err := uuid.Validate(params.UserID); err != nil || params.UserID == "" {
 		return nil, ErrInvalidInput
 	}
 
-	newOrgUser, err := s.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
-		OrgID:  input.OrgID,
-		UserID: input.UserID,
-		Role:   input.Role,
+	newOrgUser, err := s.orgUserRepo.Create(params.Ctx, &repositories.CreateOrganizationUserParams{
+		OrgID:  params.OrgID,
+		UserID: params.UserID,
+		Role:   params.Role,
 	})
 	if err != nil {
 		// Log the error to get more context

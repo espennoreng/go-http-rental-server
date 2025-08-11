@@ -17,8 +17,16 @@ type OrganizationService interface {
 	GetOrganizationByID(ctx context.Context, id string) (*models.Organization, error)
 }
 
+type CreateOrganizationUserParams struct {
+	Ctx          context.Context
+	ActingUserID string
+	OrgID       string
+	UserID      string
+	Role        models.Role
+}
+
 type OrganizationUserService interface {
-	CreateOrganizationUser(ctx context.Context, userID string, input repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error)
+	CreateOrganizationUser(params CreateOrganizationUserParams) (*models.OrganizationUser, error)
 	GetUsersByOrganizationID(ctx context.Context, orgID, userID string) ([]*models.UserWithRole, error)
 	UpdateUserRole(ctx context.Context, orgID, userID string, newRole models.Role) error
 	DeleteUserFromOrganization(ctx context.Context, orgID, userID,  userIDToDelete string) error

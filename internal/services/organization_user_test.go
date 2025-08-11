@@ -63,10 +63,12 @@ func TestOrganizationUserService_Create(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		orgID := uuid.New().String()
 		userID := uuid.New().String()
-		orgUser, err := service.CreateOrganizationUser(context.Background(), userID, repositories.CreateOrganizationUserParams{
-			OrgID:  orgID,
-			UserID: userID,
-			Role:   models.RoleMember,
+		orgUser, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: userID,
+			OrgID:       orgID,
+			UserID:      userID,
+			Role:        models.RoleMember,
 		})
 		assert.NoError(t, err)
 		assert.NotNil(t, orgUser)
@@ -76,29 +78,34 @@ func TestOrganizationUserService_Create(t *testing.T) {
 	})
 
 	t.Run("invalid organization ID", func(t *testing.T) {
-		_, err := service.CreateOrganizationUser(context.Background(), uuid.New().String(), repositories.CreateOrganizationUserParams{
-			OrgID:  "invalid-id",
-			UserID: uuid.New().String(),
-			Role:   models.RoleMember,
+		_, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: uuid.New().String(),
+			OrgID:       "invalid-id",
+			UserID:      uuid.New().String(),
+			Role:        models.RoleMember,
 		})
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid user ID", func(t *testing.T) {
-		_, err := service.CreateOrganizationUser(
-			context.Background(), uuid.New().String(), repositories.CreateOrganizationUserParams{
-				OrgID:  uuid.New().String(),
-				UserID: "invalid-id",
-				Role:   models.RoleMember,
-			})
+		_, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: uuid.New().String(),
+			OrgID:       uuid.New().String(),
+			UserID:      "invalid-id",
+			Role:        models.RoleMember,
+		})
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid role", func(t *testing.T) {
-		_, err := service.CreateOrganizationUser(context.Background(), uuid.New().String(), repositories.CreateOrganizationUserParams{
-			OrgID:  uuid.New().String(),
-			UserID: uuid.New().String(),
-			Role:   "invalid-role",
+		_, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: uuid.New().String(),
+			OrgID:       uuid.New().String(),
+			UserID:      uuid.New().String(),
+			Role:        "invalid-role",
 		})
 		assert.Error(t, err)
 	})
@@ -111,10 +118,12 @@ func TestOrganizationUserService_Create(t *testing.T) {
 				Role:   models.RoleMember, // Simulating that the user is not an admin
 			}, nil
 		}
-		orgUser, err := service.CreateOrganizationUser(context.Background(), uuid.New().String(), repositories.CreateOrganizationUserParams{
-			OrgID:  uuid.New().String(),
-			UserID: uuid.New().String(),
-			Role:   models.RoleMember,
+		orgUser, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: uuid.New().String(),
+			OrgID:       uuid.New().String(),
+			UserID:      uuid.New().String(),
+			Role:       models.RoleMember,
 		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUnauthorized, err)
@@ -125,13 +134,13 @@ func TestOrganizationUserService_Create(t *testing.T) {
 		mockRepo.GetByIDFunc = func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
 			return nil, nil // Simulating that the user is not part of the organization
 		}
-		orgUser, err := service.CreateOrganizationUser(context.Background(),
-			uuid.New().String(),
-			repositories.CreateOrganizationUserParams{
-				OrgID:  uuid.New().String(),
-				UserID: uuid.New().String(),
-				Role:   models.RoleMember,
-			})
+		orgUser, err := service.CreateOrganizationUser(services.CreateOrganizationUserParams{
+			Ctx:          context.Background(),
+			ActingUserID: uuid.New().String(),
+			OrgID:       uuid.New().String(),
+			UserID:      uuid.New().String(),
+			Role:       models.RoleMember,
+		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
 		assert.Nil(t, orgUser)
