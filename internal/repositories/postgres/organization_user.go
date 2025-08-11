@@ -21,19 +21,33 @@ func NewOrganizationUserRepository(db *pgxpool.Pool) *OrganizationUserRepository
 
 var _ repositories.OrganizationUserRepository = (*OrganizationUserRepository)(nil)
 
-func (r *OrganizationUserRepository) Create(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
+func (r *OrganizationUserRepository) Create(ctx context.Context, params *repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
 	query := `
-		INSERT INTO organization_users (organization_id, user_id, created_at)
-		VALUES ($1, $2, $3)
-		RETURNING organization_id, user_id, created_at
+		INSERT INTO organization_users (organization_id, user_id, created_at, role)
+		VALUES ($1, $2, $3, $4)
+		RETURNING organization_id, user_id, created_at, role
 	`
 
 	var orgUser models.OrganizationUser
-	err := r.db.QueryRow(ctx, query, orgID, userID, time.Now()).Scan(&orgUser.OrgID, &orgUser.UserID, &orgUser.CreatedAt)
+	err := r.db.QueryRow(ctx, query, params.OrgID, params.UserID, time.Now(), params.Role).Scan(&orgUser.OrgID, &orgUser.UserID, &orgUser.CreatedAt, &orgUser.Role)
 	if err != nil {
 		return nil, err
 	}
 
+	return &orgUser, nil
+}
+
+func (r *OrganizationUserRepository) GetByID(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
+	query := `
+		SELECT organization_id, user_id, created_at, role
+		FROM organization_users
+		WHERE organization_id = $1 AND user_id = $2
+	`
+	var orgUser models.OrganizationUser
+	err := r.db.QueryRow(ctx, query, orgID, userID).Scan(&orgUser.OrgID, &orgUser.UserID, &orgUser.CreatedAt, &orgUser.Role)
+	if err != nil {
+		return nil, err
+	}
 	return &orgUser, nil
 }
 
@@ -64,32 +78,6 @@ func (r *OrganizationUserRepository) GetUsersByOrganizationID(ctx context.Contex
 	}
 
 	return orgUsersWithRole, nil
-}
-
-func (r *OrganizationUserRepository) GetOrganizationsByUserID(ctx context.Context, userID string) ([]*models.Organization, error) {
-	query := `
-		SELECT o.id, o.name, o.created_by, o.created_at, o.updated_at
-		FROM organizations o
-		JOIN organization_users ou ON ou.organization_id = o.id
-		WHERE ou.user_id = $1
-	`
-
-	rows, err := r.db.Query(ctx, query, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	orgs := make([]*models.Organization, 0)
-	for rows.Next() {
-		var org models.Organization
-		if err := rows.Scan(&org.ID, &org.Name, &org.CreatedBy, &org.CreatedAt, &org.UpdatedAt); err != nil {
-			return nil, err
-		}
-		orgs = append(orgs, &org)
-	}
-
-	return orgs, nil
 }
 
 func (r *OrganizationUserRepository) Delete(ctx context.Context, orgID string, userID string) error {

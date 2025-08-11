@@ -16,6 +16,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+
+
 func main() {
 	// 1. Load application configuration
 	cfg := config.New()

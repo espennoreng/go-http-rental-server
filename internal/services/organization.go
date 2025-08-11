@@ -8,12 +8,12 @@ import (
 )
 
 type organizationService struct {
-	organizationRepo repositories.OrganizationRepository
+	orgRepo repositories.OrganizationRepository
 }
 
-func NewOrganizationService(organizationRepo repositories.OrganizationRepository) *organizationService {
+func NewOrganizationService(orgRepo repositories.OrganizationRepository) *organizationService {
 	return &organizationService{
-		organizationRepo: organizationRepo,
+		orgRepo: orgRepo,
 	}
 }
 
@@ -25,7 +25,7 @@ func (s *organizationService) CreateOrganization(ctx context.Context, input repo
 		return nil, ErrInvalidInput
 	}
 
-	newOrganization, err := s.organizationRepo.Create(ctx, &repositories.CreateOrganizationParams{
+	newOrganization, err := s.orgRepo.Create(ctx, &repositories.CreateOrganizationParams{
 		Name:      input.Name,
 		CreatedBy: input.CreatedBy,
 	})
@@ -42,7 +42,7 @@ func (s *organizationService) GetOrganizationByID(ctx context.Context, id string
 		return nil, ErrInvalidInput
 	}
 
-	organization, err := s.organizationRepo.GetByID(ctx, id)
+	organization, err := s.orgRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, ErrInternalServer
 	}

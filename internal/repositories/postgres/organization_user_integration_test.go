@@ -39,7 +39,11 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, user)
 
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 		require.Equal(t, org.ID, orgUser.OrgID)
@@ -71,14 +75,22 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, user)
 
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 		require.Equal(t, org.ID, orgUser.OrgID)
 		require.Equal(t, user.ID, orgUser.UserID)
 
 		// Attempt to create the same organization-user relationship again
-		orgUserDup, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUserDup, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.Error(t, err)
 		require.Nil(t, orgUserDup, "should return nil on duplicate creation")
 		require.Contains(t, err.Error(), "duplicate key value violates unique constraint")
@@ -105,7 +117,11 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, user)
 
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 		require.Equal(t, org.ID, orgUser.OrgID)
@@ -155,7 +171,11 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 			CreatedBy: createOrgUser.ID,
 		})
 		require.NoError(t, err)
-		orgUser, err := th.orgUserRepo.Create(ctx, org2.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org2.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 		require.Equal(t, org2.ID, orgUser.OrgID)
@@ -166,51 +186,6 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NotNil(t, orgUsers)
 		// Should return an empty slice since the user is not part of the first organization
 		require.Len(t, orgUsers, 0)
-	})
-
-	t.Run("GetOrganizationsByUserID", func(t *testing.T) {
-		th.ResetDB(t)
-
-		createOrgUser, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
-			Username: "Jane Doe",
-			Email:    "jane@example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, createOrgUser)
-		org, err := th.orgRepo.Create(ctx, &repositories.CreateOrganizationParams{
-			Name:      "Test Org",
-			CreatedBy: createOrgUser.ID,
-		})
-		require.NoError(t, err)
-		user, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
-			Username: "John Doe",
-			Email:    "john@example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, user)
-
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
-		require.NoError(t, err)
-		require.NotNil(t, orgUser)
-		require.Equal(t, org.ID, orgUser.OrgID)
-		require.Equal(t, user.ID, orgUser.UserID)
-
-		userOrgs, err := th.orgUserRepo.GetOrganizationsByUserID(ctx, user.ID)
-		require.NoError(t, err)
-		require.NotNil(t, userOrgs)
-		// Check that the found user organizations match the created ones
-		require.Len(t, userOrgs, 1)
-		require.Equal(t, org.ID, userOrgs[0].ID)
-	})
-
-	t.Run("GetOrganizationsByUserID_InvalidID", func(t *testing.T) {
-		th.ResetDB(t)
-
-		randomID := "invalid-user-id"
-		userOrgs, err := th.orgUserRepo.GetOrganizationsByUserID(ctx, randomID)
-		require.NoError(t, err)
-		require.NotNil(t, userOrgs)
-		require.Len(t, userOrgs, 0, "should return an empty slice for non-existent user ID")
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -233,7 +208,11 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, user)
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 
@@ -267,7 +246,11 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, user)
-		orgUser, err := th.orgUserRepo.Create(ctx, org.ID, user.ID)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
 		require.NoError(t, err)
 		require.NotNil(t, orgUser)
 		require.Equal(t, org.ID, orgUser.OrgID)
@@ -280,6 +263,53 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, orgUsers, 1)
 		require.Equal(t, models.RoleAdmin, orgUsers[0].Role, "should have updated the role to admin")
-
 	})
+
+	t.Run("GetByID", func(t *testing.T) {
+		th.ResetDB(t)
+
+		createOrgUser, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
+			Username: "Jane Doe",
+			Email:    "jane@example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, createOrgUser)
+		org, err := th.orgRepo.Create(ctx, &repositories.CreateOrganizationParams{
+			Name:      "Test Org",
+			CreatedBy: createOrgUser.ID,
+		})
+		require.NoError(t, err)
+		user, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
+			Username: "John Doe",
+			Email:    "john@example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, user)
+		orgUser, err := th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user.ID,
+			Role:   models.RoleMember,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, orgUser)
+		require.Equal(t, org.ID, orgUser.OrgID)
+		require.Equal(t, user.ID, orgUser.UserID)
+
+		// Get the organization user by ID
+		orgUserRetrieved, err := th.orgUserRepo.GetByID(ctx, org.ID, user.ID)
+		require.NoError(t, err)
+		require.NotNil(t, orgUserRetrieved)
+		require.Equal(t, org.ID, orgUserRetrieved.OrgID)
+		require.Equal(t, user.ID, orgUserRetrieved.UserID)
+		require.Equal(t, models.RoleMember, orgUserRetrieved.Role)
+	})
+	t.Run("GetByID_NotFound", func(t *testing.T) {
+		th.ResetDB(t)
+
+		// Attempt to get an organization user that does not exist
+		orgUserRetrieved, err := th.orgUserRepo.GetByID(ctx, "non-existent-org-id", "non-existent-user-id")
+		require.Error(t, err)
+		require.Nil(t, orgUserRetrieved, "should return nil for non-existent organization user")
+	})
+	
 }

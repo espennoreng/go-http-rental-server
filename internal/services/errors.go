@@ -12,4 +12,6 @@ var (
 	ErrInternalServer    = errors.New("internal server error")
 	ErrUserWithDuplicateDetailsExists = errors.New("user with similar details already exists")
 	ErrDuplicateInput    = errors.New("duplicate input")
+	ErrUserNotPartOfOrganization = errors.New("user is not part of the organization")
+	ErrUnauthorized       = errors.New("unauthorized")
 )

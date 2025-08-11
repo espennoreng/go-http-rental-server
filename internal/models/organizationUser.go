@@ -8,10 +8,3 @@ type OrganizationUser struct {
 	CreatedAt time.Time `json:"created_at"`
 	Role      Role      `json:"role"`
 }
-
-type Role string
-
-const (
-	RoleAdmin  Role = "admin"
-	RoleMember Role = "member"
-)
