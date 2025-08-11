@@ -27,6 +27,8 @@ func TestPostgresUserRepository(t *testing.T) {
 	})
 
 	t.Run("Create_UniqueConstraint", func(t *testing.T) {
+		th.ResetDB(t)
+
 		params := &repositories.CreateUserParams{
 			Username: "Jane Doe",
 			Email:    "jane@example.com",
@@ -45,6 +47,8 @@ func TestPostgresUserRepository(t *testing.T) {
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
+		th.ResetDB(t)
+
 		newUser, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
 			Username: "John Doe",
 			Email:    "johndoe@example.com",
@@ -60,6 +64,8 @@ func TestPostgresUserRepository(t *testing.T) {
 	})
 
 	t.Run("GetByID_NotFound", func(t *testing.T) {
+		th.ResetDB(t)
+		
 		randomID := uuid.New().String()
 		_, err := th.userRepo.GetByID(ctx, randomID)
 		require.Error(t, err)
