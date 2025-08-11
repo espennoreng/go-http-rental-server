@@ -25,46 +25,46 @@ var _ AccessService = (*accessService)(nil)
 // IsAdmin checks if a user has 'admin' privileges in an organization.
 // It returns ErrInvalidInput if the UUIDs are malformed,
 // ErrUnauthorized if the user is not an admin, or a database error.
-func (s *accessService) IsAdmin(ctx context.Context, orgID, userID string) error {
+func (s *accessService) IsAdmin(ctx context.Context, orgID, userID string) (bool, error) {
 	if err := uuid.Validate(orgID); err != nil || orgID == "" {
-		return ErrInvalidInput
+		return false, ErrInvalidInput
 	}
 	if err := uuid.Validate(userID); err != nil || userID == "" {
-		return ErrInvalidInput
+		return false, ErrInvalidInput
 	}
 
 	orgUser, err := s.orgUserRepo.GetByID(ctx, orgID, userID)
 	if err != nil {
 		// Log the underlying error for debugging purposes
-		return ErrUnauthorized
+		return false, ErrUnauthorized
 	}
 	if orgUser == nil {
-		return ErrUserNotPartOfOrganization
+		return false, ErrUserNotPartOfOrganization
 	}
 	if orgUser.Role != models.RoleAdmin {
-		return ErrUnauthorized
+		return false, ErrUnauthorized
 	}
-	return nil
+	return true, nil
 }
 
 // IsMember checks if a user is a member of an organization.
 // It returns ErrInvalidInput if the UUIDs are malformed,
 // ErrUnauthorized if the user is not a member, or a database error.
-func (s *accessService) IsMember(ctx context.Context, orgID, userID string) error {
+func (s *accessService) IsMember(ctx context.Context, orgID, userID string) (bool, error) {
 	if err := uuid.Validate(orgID); err != nil || orgID == "" {
-		return ErrInvalidInput
+		return false, ErrInvalidInput
 	}
 	if err := uuid.Validate(userID); err != nil || userID == "" {
-		return ErrInvalidInput
+		return false, ErrInvalidInput
 	}
 
 	orgUser, err := s.orgUserRepo.GetByID(ctx, orgID, userID)
 	if err != nil {
 		// Log the underlying error for debugging purposes
-		return ErrUnauthorized
+		return false, ErrUnauthorized
 	}
 	if orgUser == nil {
-		return ErrUserNotPartOfOrganization
+		return false, ErrUserNotPartOfOrganization
 	}
-	return nil
+	return true, nil
 }

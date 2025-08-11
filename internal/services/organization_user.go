@@ -21,9 +21,11 @@ func NewOrganizationUserService(orgUserRepo repositories.OrganizationUserReposit
 	}
 }
 
+var _ OrganizationUserService = (*organizationUserService)(nil)
+
 // CreateOrganizationUser handles the creation of a new organization-user relationship.
 func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, userID string, input repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
-	if err := s.access.IsAdmin(ctx, input.OrgID, userID); err != nil {
+	if _, err := s.access.IsAdmin(ctx, input.OrgID, userID); err != nil {
 		return nil, err
 	}
 
@@ -51,7 +53,7 @@ func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, us
 
 // GetUsersByOrganizationID retrieves all users within an organization.
 func (s *organizationUserService) GetUsersByOrganizationID(ctx context.Context, userID, orgID string) ([]*models.UserWithRole, error) {
-	if err := s.access.IsMember(ctx, orgID, userID); err != nil {
+	if _, err := s.access.IsMember(ctx, orgID, userID); err != nil {
 		return nil, err
 	}
 
@@ -65,8 +67,8 @@ func (s *organizationUserService) GetUsersByOrganizationID(ctx context.Context, 
 }
 
 // UpdateRole updates a user's role within an organization.
-func (s *organizationUserService) UpdateRole(ctx context.Context, orgID, userID string, newRole models.Role) error {
-	if err := s.access.IsAdmin(ctx, orgID, userID); err != nil {
+func (s *organizationUserService) UpdateUserRole(ctx context.Context, orgID, userID string, newRole models.Role) error {
+	if _, err := s.access.IsAdmin(ctx, orgID, userID); err != nil {
 		return err
 	}
 
@@ -75,6 +77,21 @@ func (s *organizationUserService) UpdateRole(ctx context.Context, orgID, userID 
 	}
 
 	err := s.orgUserRepo.UpdateRole(ctx, orgID, userID, newRole)
+	if err != nil {
+		// Log the error to get more context
+		return ErrInternalServer
+	}
+
+	return nil
+}
+
+// DeleteUserFromOrganization removes a user from an organization.
+func (s *organizationUserService) DeleteUserFromOrganization(ctx context.Context, orgID, userID, userIDToDelete string) error {
+	if _, err := s.access.IsAdmin(ctx, orgID, userID); err != nil {
+		return err
+	}
+
+	err := s.orgUserRepo.Delete(ctx, orgID, userIDToDelete)
 	if err != nil {
 		// Log the error to get more context
 		return ErrInternalServer

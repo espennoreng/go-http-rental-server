@@ -12,6 +12,10 @@ type CreateOrganizationUserParams struct {
 	Role   models.Role   `json:"role"`
 }
 
+type UpdateUserRoleParams struct {
+	NewRole models.Role `json:"new_role"`
+}
+
 type OrganizationUserRepository interface {
 	Create(ctx context.Context, input *CreateOrganizationUserParams) (*models.OrganizationUser, error)
 	GetByID(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error)

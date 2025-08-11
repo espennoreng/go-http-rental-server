@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
@@ -108,4 +109,145 @@ func (h *organizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http
 	}
 
 	respondJSON(w, http.StatusOK, org)
+}
+
+type accessHandler struct {
+	accessService services.AccessService
+}
+
+func NewAccessHandler(accessService services.AccessService) *accessHandler {
+	return &accessHandler{
+		accessService: accessService,
+	}
+}
+
+func (h *accessHandler) IsAdmin(w http.ResponseWriter, r *http.Request) {
+	orgID := chi.URLParam(r, "orgID")
+	userID := chi.URLParam(r, "userID")
+
+	isAdmin, err := h.accessService.IsAdmin(r.Context(), orgID, userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]bool{"is_admin": isAdmin})
+}
+
+func (h *accessHandler) IsMember(w http.ResponseWriter, r *http.Request) {
+	orgID := chi.URLParam(r, "orgID")
+	userID := chi.URLParam(r, "userID")
+
+	isMember, err := h.accessService.IsMember(r.Context(), orgID, userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]bool{"is_member": isMember})
+}
+
+type organizationUserHandler struct {
+	organizationUserService services.OrganizationUserService
+}
+
+func NewOrganizationUserHandler(organizationUserService services.OrganizationUserService) *organizationUserHandler {
+	return &organizationUserHandler{
+		organizationUserService: organizationUserService,
+	}
+}
+
+func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.GetUserIDFromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
+	var input repositories.CreateOrganizationUserParams
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(r.Context(), userID, input)
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidInput) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, newOrgUser)
+}
+
+func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.GetUserIDFromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+	orgID := chi.URLParam(r, "orgID")
+
+	users, err := h.organizationUserService.GetUsersByOrganizationID(r.Context(), orgID, userID)
+	if err != nil {
+		if errors.Is(err, services.ErrUnauthorized) {
+			respondError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, users)
+}
+
+func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.GetUserIDFromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
+	orgID := chi.URLParam(r, "orgID")
+
+	var input repositories.UpdateUserRoleParams
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := h.organizationUserService.UpdateUserRole(r.Context(), orgID, userID, input.NewRole); err != nil {
+		if errors.Is(err, services.ErrInvalidInput) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *organizationUserHandler) DeleteUserFromOrganization(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.GetUserIDFromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+	orgID := chi.URLParam(r, "orgID")
+	userIDToDelete := chi.URLParam(r, "userID")
+
+	if err := h.organizationUserService.DeleteUserFromOrganization(r.Context(), userID, orgID, userIDToDelete); err != nil {
+		if errors.Is(err, services.ErrUnauthorized) {
+			respondError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

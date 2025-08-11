@@ -11,25 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockAccessChecker struct {
-	IsAdminFunc  func(ctx context.Context, orgID, userID string) error
-	IsMemberFunc func(ctx context.Context, orgID, userID string) error
-}
-
-func (m *mockAccessChecker) IsAdmin(ctx context.Context, orgID, userID string) error {
-	return m.IsAdminFunc(ctx, orgID, userID)
-}
-
-func (m *mockAccessChecker) IsMember(ctx context.Context, orgID, userID string) error {
-	return m.IsMemberFunc(ctx, orgID, userID)
-}
-
-var _ services.AccessService = (*mockAccessChecker)(nil)
 
 type mockOrganizationUserRepository struct {
 	CreateOrganizationUserFunc   func(ctx context.Context, input repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error)
 	GetUsersByOrganizationIDFunc func(ctx context.Context, orgID string) ([]*models.UserWithRole, error)
-	UpdateRoleFunc               func(ctx context.Context, orgID, userID string, newRole models.Role) error
+	UpdateUserRoleFunc            func(ctx context.Context, orgID, userID string, newRole models.Role) error
 	DeleteOrganizationUserFunc   func(ctx context.Context, orgID, userID string) error
 	GetByIDFunc                  func(ctx context.Context, orgID, userID string) (*models.OrganizationUser, error)
 }
@@ -43,7 +29,7 @@ func (m *mockOrganizationUserRepository) GetUsersByOrganizationID(ctx context.Co
 }
 
 func (m *mockOrganizationUserRepository) UpdateRole(ctx context.Context, orgID, userID string, newRole models.Role) error {
-	return m.UpdateRoleFunc(ctx, orgID, userID, newRole)
+	return m.UpdateUserRoleFunc(ctx, orgID, userID, newRole)
 }
 
 func (m *mockOrganizationUserRepository) Delete(ctx context.Context, orgID, userID string) error {
@@ -205,9 +191,9 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 	})
 }
 
-func TestOrganizationUserService_UpdateRole(t *testing.T) {
+func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 	mockRepo := &mockOrganizationUserRepository{
-		UpdateRoleFunc: func(ctx context.Context, orgID string, userID string, newRole models.Role) error {
+		UpdateUserRoleFunc: func(ctx context.Context, orgID string, userID string, newRole models.Role) error {
 			return nil
 		},
 		GetByIDFunc: func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
@@ -222,22 +208,22 @@ func TestOrganizationUserService_UpdateRole(t *testing.T) {
 	service := services.NewOrganizationUserService(mockRepo, accessService)
 
 	t.Run("successful role update", func(t *testing.T) {
-		err := service.UpdateRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleMember)
+		err := service.UpdateUserRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleMember)
 		assert.NoError(t, err)
 	})
 
 	t.Run("invalid organization ID", func(t *testing.T) {
-		err := service.UpdateRole(context.Background(), "invalid-id", uuid.New().String(), models.RoleAdmin)
+		err := service.UpdateUserRole(context.Background(), "invalid-id", uuid.New().String(), models.RoleAdmin)
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid user ID", func(t *testing.T) {
-		err := service.UpdateRole(context.Background(), uuid.New().String(), "invalid-id", models.RoleAdmin)
+		err := service.UpdateUserRole(context.Background(), uuid.New().String(), "invalid-id", models.RoleAdmin)
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid role", func(t *testing.T) {
-		err := service.UpdateRole(context.Background(), uuid.New().String(), uuid.New().String(), "invalid-role")
+		err := service.UpdateUserRole(context.Background(), uuid.New().String(), uuid.New().String(), "invalid-role")
 		assert.Error(t, err)
 	})
 
@@ -245,7 +231,7 @@ func TestOrganizationUserService_UpdateRole(t *testing.T) {
 		mockRepo.GetByIDFunc = func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
 			return nil, nil // Simulating that the user is not part of the organization
 		}
-		err := service.UpdateRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleAdmin)
+		err := service.UpdateUserRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleAdmin)
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
 	})
@@ -258,7 +244,7 @@ func TestOrganizationUserService_UpdateRole(t *testing.T) {
 				Role:   models.RoleMember,
 			}, nil
 		}
-		err := service.UpdateRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleAdmin)
+		err := service.UpdateUserRole(context.Background(), uuid.New().String(), uuid.New().String(), models.RoleAdmin)
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUnauthorized, err)
 	})

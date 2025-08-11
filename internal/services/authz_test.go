@@ -95,7 +95,7 @@ func TestAccessService_IsAdmin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := services.NewAccessService(tt.mock)
-			err := s.IsAdmin(ctx, tt.orgID, tt.userID)
+			_, err := s.IsAdmin(ctx, tt.orgID, tt.userID)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
@@ -170,7 +170,7 @@ func TestAccessService_IsMember(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := services.NewAccessService(tt.mock)
-			err := s.IsMember(ctx, tt.orgID, tt.userID)
+			_, err := s.IsMember(ctx, tt.orgID, tt.userID)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
