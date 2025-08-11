@@ -1,7 +1,5 @@
 # This file defines your development database service using Docker Compose.
 # Run `docker-compose up -d` in your terminal to start it.
-version: '3.8'
-
 services:
   # This defines the postgres service
   postgres:

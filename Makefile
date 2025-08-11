@@ -59,6 +59,16 @@ migrate-up:
 	@echo "Applying database migrations..."
 	@migrate -database "${DATABASE_URL}" -path migrations up
 
+## migrate-down: Rolls back the last applied migration.
+migrate-down:
+	@echo "Rolling back the last migration..."
+	@migrate -database "${DATABASE_URL}" -path migrations down
+
+## migrate-status: Shows the status of database migrations.
+migrate-status:
+	@echo "Checking migration status..."
+	@migrate -database "${DATABASE_URL}" -path migrations version
+
 # ====================================================================================
 # Build and Cleanup Commands
 # ====================================================================================
