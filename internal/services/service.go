@@ -64,3 +64,13 @@ type OrganizationUserService interface {
 	UpdateUserRole(ctx context.Context, params UpdateUserRoleParams) error
 	DeleteUserFromOrganization(ctx context.Context, params DeleteOrganizationUserParams) error
 }
+
+type OrgAccessParams struct {
+	OrgID  string
+	UserID string
+}
+
+type AccessService interface {
+	IsAdmin(ctx context.Context, params OrgAccessParams) error
+	IsMember(ctx context.Context, params OrgAccessParams) error
+}

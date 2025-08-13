@@ -10,12 +10,14 @@ import (
 
 type organizationUserService struct {
 	orgUserRepo repositories.OrganizationUserRepository
+	accessService AccessService
 }
 
 // NewOrganizationUserService initializes a new organizationUserService.
-func NewOrganizationUserService(orgUserRepo repositories.OrganizationUserRepository) *organizationUserService {
+func NewOrganizationUserService(orgUserRepo repositories.OrganizationUserRepository, accessService AccessService) *organizationUserService {
 	return &organizationUserService{
 		orgUserRepo: orgUserRepo,
+		accessService: accessService,
 	}
 }
 
@@ -23,14 +25,23 @@ var _ OrganizationUserService = (*organizationUserService)(nil)
 
 // CreateOrganizationUser handles the creation of a new organization-user relationship.
 func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, params CreateOrganizationUserParams) (*models.OrganizationUser, error) {
-	// TODO: check if user is admin
+	err := s.accessService.IsAdmin(ctx, OrgAccessParams{
+		OrgID:  params.OrgID,
+		UserID: params.ActingUserID,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	if !models.ValidRoles[params.Role] {
 		return nil, ErrInvalidInput
 	}
 
-	// orgID is validated in IsAdmin, so we can assume it's valid here
 	if err := uuid.Validate(params.UserID); err != nil || params.UserID == "" {
+		return nil, ErrInvalidInput
+	}
+
+	if err := uuid.Validate(params.OrgID); err != nil || params.OrgID == "" {
 		return nil, ErrInvalidInput
 	}
 
@@ -49,7 +60,14 @@ func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, pa
 
 // GetUsersByOrganizationID retrieves all users within an organization.
 func (s *organizationUserService) GetUsersByOrganizationID(ctx context.Context, params GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
-	// TODO: check if user is member
+	err := s.accessService.IsMember(ctx, OrgAccessParams{
+		OrgID: params.OrgID,
+		UserID: params.ActingUserID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	users, err := s.orgUserRepo.GetUsersByOrganizationID(ctx, params.OrgID)
 	if err != nil {
@@ -62,13 +80,19 @@ func (s *organizationUserService) GetUsersByOrganizationID(ctx context.Context, 
 
 // UpdateRole updates a user's role within an organization.
 func (s *organizationUserService) UpdateUserRole(ctx context.Context, params UpdateUserRoleParams) error {
-	// TODO: check if user is admin
+	err := s.accessService.IsAdmin(ctx, OrgAccessParams{
+		OrgID:  params.OrgID,
+		UserID: params.ActingUserID,
+	})
+	if err != nil {
+		return err
+	}
 
 	if !models.ValidRoles[params.NewRole] {
 		return ErrInvalidInput
 	}
 
-	err := s.orgUserRepo.UpdateRole(ctx, params.OrgID, params.ActingUserID, params.NewRole)
+	err = s.orgUserRepo.UpdateRole(ctx, params.OrgID, params.ActingUserID, params.NewRole)
 	if err != nil {
 		// Log the error to get more context
 		return ErrInternalServer
@@ -79,9 +103,15 @@ func (s *organizationUserService) UpdateUserRole(ctx context.Context, params Upd
 
 // DeleteUserFromOrganization removes a user from an organization.
 func (s *organizationUserService) DeleteUserFromOrganization(ctx context.Context, params DeleteOrganizationUserParams) error {
-	// TODO: check if user is admin
+	err := s.accessService.IsAdmin(ctx, OrgAccessParams{
+		OrgID:  params.OrgID,
+		UserID: params.ActingUserID,
+	})
+	if err != nil {
+		return err
+	}
 
-	err := s.orgUserRepo.Delete(ctx, params.OrgID, params.UserIDToDelete)
+	err = s.orgUserRepo.Delete(ctx, params.OrgID, params.UserIDToDelete)
 	if err != nil {
 		// Log the error to get more context
 		return ErrInternalServer

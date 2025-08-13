@@ -38,8 +38,24 @@ func (m *mockOrganizationUserRepository) GetByID(ctx context.Context, orgID, use
 	return m.GetByIDFunc(ctx, orgID, userID)
 }
 
+type mockAccessService struct {
+	IsAdminFunc func(ctx context.Context, params services.OrgAccessParams) error
+	IsMemberFunc func(ctx context.Context, params services.OrgAccessParams) error
+}
+
+func (m *mockAccessService) IsAdmin(ctx context.Context, params services.OrgAccessParams) error {
+	return m.IsAdminFunc(ctx, params)
+}
+
+func (m *mockAccessService) IsMember(ctx context.Context, params services.OrgAccessParams) error {
+	return m.IsMemberFunc(ctx, params)
+}
+
 func TestOrganizationUserService_Create(t *testing.T) {
 	ctx := context.Background()
+
+	adminUserID := uuid.New().String()
+	memberUserID := uuid.New().String()
 
 	mockRepo := &mockOrganizationUserRepository{
 		CreateOrganizationUserFunc: func(ctx context.Context, input repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
@@ -58,29 +74,49 @@ func TestOrganizationUserService_Create(t *testing.T) {
 		},
 	}
 
-	service := services.NewOrganizationUserService(mockRepo)
+	mockAccessService := &mockAccessService{
+		IsAdminFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.OrgID == "" || params.UserID == "" {
+				return services.ErrInvalidInput
+			}
+			if params.UserID != adminUserID { // Simulating that only this user is an admin
+				return services.ErrUnauthorized
+			}
+			return nil
+		},
+		IsMemberFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.OrgID == "" || params.UserID == "" {
+				return services.ErrInvalidInput
+			}
+			if params.UserID == memberUserID { // Simulating that this user is a member
+				return nil
+			}
+			return services.ErrUnauthorized
+		},
+	}
+
+	service := services.NewOrganizationUserService(mockRepo, mockAccessService)
 
 	t.Run("successful creation", func(t *testing.T) {
 		orgID := uuid.New().String()
-		userID := uuid.New().String()
 		orgUser, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
-			ActingUserID: userID,
+			ActingUserID: adminUserID,
 			OrgID:        orgID,
-			UserID:       userID,
+			UserID:       memberUserID,
 			Role:         models.RoleMember,
 		})
 		assert.NoError(t, err)
 		assert.NotNil(t, orgUser)
 		assert.Equal(t, orgID, orgUser.OrgID)
-		assert.Equal(t, userID, orgUser.UserID)
+		assert.Equal(t, memberUserID, orgUser.UserID)
 		assert.Equal(t, models.RoleMember, orgUser.Role)
 	})
 
 	t.Run("invalid organization ID", func(t *testing.T) {
 		_, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
-			ActingUserID: uuid.New().String(),
+			ActingUserID: adminUserID,
 			OrgID:        "invalid-id",
-			UserID:       uuid.New().String(),
+			UserID:       memberUserID,
 			Role:         models.RoleMember,
 		})
 		assert.Error(t, err)
@@ -88,7 +124,7 @@ func TestOrganizationUserService_Create(t *testing.T) {
 
 	t.Run("invalid user ID", func(t *testing.T) {
 		_, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
-			ActingUserID: uuid.New().String(),
+			ActingUserID: adminUserID,
 			OrgID:        uuid.New().String(),
 			UserID:       "invalid-id",
 			Role:         models.RoleMember,
@@ -98,7 +134,7 @@ func TestOrganizationUserService_Create(t *testing.T) {
 
 	t.Run("invalid role", func(t *testing.T) {
 		_, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
-			ActingUserID: uuid.New().String(),
+			ActingUserID: adminUserID,
 			OrgID:        uuid.New().String(),
 			UserID:       uuid.New().String(),
 			Role:         "invalid-role",
@@ -115,7 +151,7 @@ func TestOrganizationUserService_Create(t *testing.T) {
 			}, nil
 		}
 		orgUser, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
-			ActingUserID: uuid.New().String(),
+			ActingUserID: memberUserID, // This user is not an admin
 			OrgID:        uuid.New().String(),
 			UserID:       uuid.New().String(),
 			Role:         models.RoleMember,
@@ -126,9 +162,6 @@ func TestOrganizationUserService_Create(t *testing.T) {
 	})
 
 	t.Run("user not part of organization", func(t *testing.T) {
-		mockRepo.GetByIDFunc = func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
-			return nil, nil // Simulating that the user is not part of the organization
-		}
 		orgUser, err := service.CreateOrganizationUser(ctx, services.CreateOrganizationUserParams{
 			ActingUserID: uuid.New().String(),
 			OrgID:        uuid.New().String(),
@@ -136,13 +169,15 @@ func TestOrganizationUserService_Create(t *testing.T) {
 			Role:         models.RoleMember,
 		})
 		assert.Error(t, err)
-		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
+		assert.Equal(t, services.ErrUnauthorized, err)
 		assert.Nil(t, orgUser)
 	})
 }
 
 func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 	ctx := context.Background()
+
+	memberUserID := uuid.New().String()
 
 	mockRepo := &mockOrganizationUserRepository{
 		GetUsersByOrganizationIDFunc: func(ctx context.Context, orgID string) ([]*models.UserWithRole, error) {
@@ -155,6 +190,14 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 					},
 					Role: models.RoleMember,
 				},
+				{
+					User: models.User{
+						ID:       uuid.New().String(),
+						Username: "jane_doe",
+						Email:    "jane_doe@example.com",
+					},
+					Role: models.RoleAdmin,
+				},
 			}, nil
 		},
 		GetByIDFunc: func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
@@ -165,16 +208,29 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 			}, nil
 		},
 	}
-	service := services.NewOrganizationUserService(mockRepo)
+
+	accessService := &mockAccessService{
+		IsMemberFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.OrgID == "" || params.UserID == "" {
+				return services.ErrInvalidInput
+			}
+			if params.UserID == memberUserID {
+				return nil
+			}
+			return services.ErrUnauthorized
+		},
+	}
+	
+	service := services.NewOrganizationUserService(mockRepo, accessService)
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		users, err := service.GetUsersByOrganizationID(ctx, services.GetUsersByOrganizationIDParams{
 			OrgID:        uuid.New().String(),
-			ActingUserID: uuid.New().String(),
+			ActingUserID: memberUserID,
 		})
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
-		assert.Len(t, users, 1)
+		assert.Len(t, users, 2)
 		assert.Equal(t, "john_doe", users[0].Username)
 		assert.Equal(t, "john_doe@example.com", users[0].Email)
 		assert.Equal(t, models.RoleMember, users[0].Role)
@@ -195,15 +251,12 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("user not part of organization", func(t *testing.T) {
-		mockRepo.GetByIDFunc = func(ctx context.Context, orgID string, userID string) (*models.OrganizationUser, error) {
-			return nil, nil // Simulating that the user is not part of the organization
-		}
 		_, err := service.GetUsersByOrganizationID(ctx, services.GetUsersByOrganizationIDParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
 		})
 		assert.Error(t, err)
-		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
+		assert.Equal(t, services.ErrUnauthorized, err)
 	})
 }
 
@@ -222,7 +275,8 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 			}, nil
 		},
 	}
-	service := services.NewOrganizationUserService(mockRepo)
+	accessService := services.NewAccessService(mockRepo)
+	service := services.NewOrganizationUserService(mockRepo, accessService)
 
 	t.Run("successful role update", func(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{

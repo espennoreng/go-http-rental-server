@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/espennoreng/go-http-rental-server/internal/middleware"
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -24,8 +24,11 @@ func NewOrganizationUserHandler(organizationUserService services.OrganizationUse
 }
 
 func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.GetUserIDFromContext(r.Context())
-
+	identity, err := auth.FromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
 	orgID := chi.URLParam(r, "orgID")
 
 	if err != nil {
@@ -43,7 +46,7 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 	}
 
 	newOrgUser, err := h.organizationUserService.CreateOrganizationUser(context.Background(), services.CreateOrganizationUserParams{
-		ActingUserID: userID,
+		ActingUserID: identity.UserID,
 		OrgID:        orgID,
 		UserID:       input.UserID,
 		Role:         input.Role,
@@ -62,7 +65,8 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 }
 
 func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.GetUserIDFromContext(r.Context())
+	identity, err := auth.FromContext(r.Context())
+
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
@@ -71,7 +75,7 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 
 	users, err := h.organizationUserService.GetUsersByOrganizationID(context.Background(), services.GetUsersByOrganizationIDParams{
 		OrgID:        orgID,
-		ActingUserID: userID,
+		ActingUserID: identity.UserID,
 	})
 
 	if err != nil {
@@ -87,7 +91,7 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 }
 
 func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.GetUserIDFromContext(r.Context())
+	identity, err := auth.FromContext(r.Context())
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
@@ -103,7 +107,7 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 
 	err = h.organizationUserService.UpdateUserRole(context.Background(), services.UpdateUserRoleParams{
 		OrgID:        orgID,
-		ActingUserID: userID,
+		ActingUserID: identity.UserID,
 		NewRole:      input.NewRole,
 	})
 
@@ -120,7 +124,7 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 }
 
 func (h *organizationUserHandler) DeleteUserFromOrganization(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.GetUserIDFromContext(r.Context())
+	identity, err := auth.FromContext(r.Context())
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
@@ -129,7 +133,7 @@ func (h *organizationUserHandler) DeleteUserFromOrganization(w http.ResponseWrit
 	userIDToDelete := chi.URLParam(r, "userID")
 
 	err = h.organizationUserService.DeleteUserFromOrganization(context.Background(), services.DeleteOrganizationUserParams{
-		ActingUserID:   userID,
+		ActingUserID:   identity.UserID,
 		OrgID:          orgID,
 		UserIDToDelete: userIDToDelete,
 	})

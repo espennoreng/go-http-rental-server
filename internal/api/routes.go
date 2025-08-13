@@ -17,6 +17,7 @@ func NewServer(
 	userService services.UserService,
 	organizationService services.OrganizationService,
 	organizationUserService services.OrganizationUserService,
+	accessService services.AccessService,
 ) *Server {
 	userHandler := NewUserHandler(userService)
 	organizationHandler := NewOrganizationHandler(organizationService)
@@ -28,7 +29,7 @@ func NewServer(
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	setupRoutes(r, userHandler, organizationHandler, organizationUserHandler)
+	setupRoutes(r, userHandler, organizationHandler, organizationUserHandler, accessService)
 
 	return &Server{
 		router: r,
@@ -40,7 +41,11 @@ func setupRoutes(
 	userHandler *userHandler,
 	organizationHandler *organizationHandler,
 	organizationUserHandler *organizationUserHandler,
+	accessService services.AccessService,
 ) {
+
+	accessMiddleware := customMiddleware.NewAccessMiddleware(accessService)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to the Rental Server API"))
 	})
@@ -58,20 +63,21 @@ func setupRoutes(
 	r.Route("/organizations", func(r chi.Router) {
 		r.Use(customMiddleware.AuthMiddleware)
 
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			organizationHandler.CreateOrganization(w, r)
+		r.With(accessMiddleware.RequireAdmin).Route("/", func(r chi.Router) {
+			r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+				organizationHandler.CreateOrganization(w, r)
+			})
 		})
-		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-			organizationHandler.GetOrganizationByID(w, r)
+		r.With(accessMiddleware.RequireMember).Route("/{id}", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				organizationHandler.GetOrganizationByID(w, r)
+			})
 		})
 
-		r.Route("/{orgID}/users", func(r chi.Router) {
+		r.With(accessMiddleware.RequireAdmin).Route("/{orgID}/users", func(r chi.Router) {
+
 			r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 				organizationUserHandler.AddUserToOrganization(w, r)
-			})
-
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				organizationUserHandler.GetUsersByOrganizationID(w, r)
 			})
 
 			r.Put("/{userID}/role", func(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +86,12 @@ func setupRoutes(
 
 			r.Delete("/{userID}", func(w http.ResponseWriter, r *http.Request) {
 				organizationUserHandler.DeleteUserFromOrganization(w, r)
+			})
+		})
+
+		r.With(accessMiddleware.RequireMember).Route("/", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				organizationUserHandler.GetUsersByOrganizationID(w, r)
 			})
 		})
 	})

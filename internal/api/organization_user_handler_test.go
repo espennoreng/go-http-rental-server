@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
@@ -35,6 +37,18 @@ func (m *mockOrganizationUserService) UpdateUserRole(ctx context.Context, params
 }
 func (m *mockOrganizationUserService) DeleteUserFromOrganization(ctx context.Context, params services.DeleteOrganizationUserParams) error {
 	return m.deleteUserFromOrganizationFunc(ctx, params)
+}
+
+type mockAccessService struct {
+	isAdminFunc func(ctx context.Context, params services.OrgAccessParams) error
+	isMemberFunc func(ctx context.Context, params services.OrgAccessParams) error
+}
+
+func (m *mockAccessService) IsAdmin(ctx context.Context, params services.OrgAccessParams) error {
+	return m.isAdminFunc(ctx, params)
+}
+func (m *mockAccessService) IsMember(ctx context.Context, params services.OrgAccessParams) error {
+	return m.isMemberFunc(ctx, params)
 }
 
 func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
@@ -69,10 +83,24 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 		},
 	}
 
+	mockAccessService := &mockAccessService{
+		isAdminFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.UserID != actingUserID {
+				t.Errorf("expected actingUserID %s, got %s", actingUserID, params.UserID)
+			}
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
+			}
+			return nil // Simulating that the acting user is an admin
+		},
+	}
+
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
-	authedHandler := api.TestAuthMiddleware(http.HandlerFunc(handler.AddUserToOrganization), actingUserID)
+	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.AddUserToOrganization))
+	authedHandler := middleware.TestAuthMiddleware(adminProtectedHandler, auth.Identity{UserID: actingUserID})
 
 	r.Method(http.MethodPost, "/organizations/{orgID}/users", authedHandler)
 
@@ -113,10 +141,25 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 		},
 	}
 
+	mockAccessService := &mockAccessService{
+		isMemberFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.UserID != userID {
+				t.Errorf("expected actingUserID %s, got %s", userID, params.UserID)
+			}
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
+			}
+			return nil // Simulating that the user is a member of the organization
+		},
+	}
+
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
-	authedHandler := api.TestAuthMiddleware(http.HandlerFunc(handler.GetUsersByOrganizationID), userID)
+
+	memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetUsersByOrganizationID))
+	authedHandler := middleware.TestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: userID})
 
 	r.Method(http.MethodGet, "/organizations/{orgID}/users", authedHandler)
 
@@ -152,10 +195,24 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 		},
 	}
 
+	mockAccessService := &mockAccessService{
+		isAdminFunc: func(ctx context.Context, params services.OrgAccessParams) error {
+			if params.UserID != actingUserID {
+				t.Errorf("expected actingUserID %s, got %s", actingUserID, params.UserID)
+			}
+			if params.OrgID != orgID {
+				t.Errorf("expected orgID %s, got %s", orgID, params.OrgID)
+			}
+			return nil
+		},
+	}
+
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
-	authedHandler := api.TestAuthMiddleware(http.HandlerFunc(handler.DeleteUserFromOrganization), actingUserID)
+	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.DeleteUserFromOrganization))
+	authedHandler := middleware.TestAuthMiddleware(adminProtectedHandler, auth.Identity{UserID: actingUserID})
 
 	r.Method(http.MethodDelete, "/organizations/{orgID}/users/{userID}", authedHandler)
 
