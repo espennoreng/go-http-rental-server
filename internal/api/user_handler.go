@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
@@ -21,13 +20,13 @@ func NewUserHandler(userService services.UserService) *userHandler {
 }
 
 func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var input repositories.CreateUserParams
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	var params services.CreateUserParams
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	user, err := h.userService.CreateUser(r.Context(), input)
+	user, err := h.userService.CreateUser(r.Context(), params)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
@@ -47,7 +46,7 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	user, err := h.userService.GetUserByID(r.Context(), id)
+	user, err := h.userService.GetUserByID(r.Context(), services.GetUserByIDParams{ID: id})
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())

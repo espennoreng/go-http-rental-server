@@ -10,32 +10,31 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
 
 type mockUserService struct {
-	createUserFunc  func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error)
-	getUserByIDFunc func(ctx context.Context, id string) (*models.User, error)
+	createUserFunc  func(ctx context.Context, params services.CreateUserParams) (*models.User, error)
+	getUserByIDFunc func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error)
 }
 
-func (m *mockUserService) CreateUser(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
-	return m.createUserFunc(ctx, input)
+func (m *mockUserService) CreateUser(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
+	return m.createUserFunc(ctx, params)
 }
 
-func (m *mockUserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
-	return m.getUserByIDFunc(ctx, id)
+func (m *mockUserService) GetUserByID(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
+	return m.getUserByIDFunc(ctx, params)
 }
 
 func TestUserHandler_CreateUser(t *testing.T) {
 	t.Run("successful user creation", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
 				return &models.User{
 					ID:       "user-001",
-					Username: input.Username,
-					Email:    input.Email,
+					Username: params.Username,
+					Email:    params.Email,
 				}, nil
 			},
 		}
@@ -90,7 +89,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns validation error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrInvalidInput
 			},
 		}
@@ -112,7 +111,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns internal server error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrInternalServer
 			},
 		}
@@ -134,7 +133,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	t.Run("service returns user with duplicate details error", func(t *testing.T) {
 		mockService := &mockUserService{
-			createUserFunc: func(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
+			createUserFunc: func(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
 				return nil, services.ErrUserWithDuplicateDetailsExists
 			},
 		}
@@ -158,8 +157,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 func TestUserHandler_GetUserByID(t *testing.T) {
 	t.Run("successful user retrieval", func(t *testing.T) {
 		mockService := &mockUserService{
-			getUserByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
-				if id == "user-001" {
+			getUserByIDFunc: func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
+				if params.ID == "user-001" {
 					return &models.User{
 						ID:       "user-001",
 						Username: "John Doe",
@@ -186,7 +185,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 	t.Run("service returns not found error", func(t *testing.T) {
 		mockService := &mockUserService{
-			getUserByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+			getUserByIDFunc: func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
 				return nil, services.ErrUserNotFound
 			},
 		}
@@ -207,7 +206,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 	t.Run("service returns internal server error", func(t *testing.T) {
 		mockService := &mockUserService{
-			getUserByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+			getUserByIDFunc: func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
 				return nil, services.ErrInternalServer
 			},
 		}

@@ -7,9 +7,18 @@ import (
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 )
 
+type CreateUserParams struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+type GetUserByIDParams struct {
+	ID string `json:"id"`
+}
+
 type UserService interface {
-	CreateUser(ctx context.Context, input repositories.CreateUserParams) (*models.User, error)
-	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	CreateUser(ctx context.Context, params CreateUserParams) (*models.User, error)
+	GetUserByID(ctx context.Context, params GetUserByIDParams) (*models.User, error)
 }
 
 type OrganizationService interface {

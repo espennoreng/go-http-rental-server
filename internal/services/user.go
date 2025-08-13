@@ -17,17 +17,17 @@ func NewUserService(userRepo repositories.UserRepository) *userService {
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, input repositories.CreateUserParams) (*models.User, error) {
-	if input.Username == "" {
+func (s *userService) CreateUser(ctx context.Context, params CreateUserParams) (*models.User, error) {
+	if params.Username == "" {
 		return nil, ErrInvalidInput
 	}
-	if input.Email == "" {
+	if params.Email == "" {
 		return nil, ErrInvalidInput
 	}
 
 	newUser, err := s.userRepo.Create(ctx, &repositories.CreateUserParams{
-		Username: input.Username,
-		Email:    input.Email,
+		Username: params.Username,
+		Email:    params.Email,
 	})
 
 	if err != nil {
@@ -37,12 +37,12 @@ func (s *userService) CreateUser(ctx context.Context, input repositories.CreateU
 	return newUser, nil
 }
 
-func (s *userService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
-	if id == "" {
+func (s *userService) GetUserByID(ctx context.Context, params GetUserByIDParams) (*models.User, error) {
+	if params.ID == "" {
 		return nil, ErrInvalidInput
 	}
 
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, params.ID)
 	if err != nil {
 		return nil, ErrInternalServer
 	}

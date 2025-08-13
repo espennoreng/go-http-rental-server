@@ -10,12 +10,12 @@ import (
 )
 
 type mockUserRepository struct {
-	createFunc  func(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error)
+	createFunc  func(ctx context.Context, params *repositories.CreateUserParams) (*models.User, error)
 	getByIDFunc func(ctx context.Context, id string) (*models.User, error)
 }
 
-func (m *mockUserRepository) Create(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error) {
-	return m.createFunc(ctx, user)
+func (m *mockUserRepository) Create(ctx context.Context, params *repositories.CreateUserParams) (*models.User, error) {
+	return m.createFunc(ctx, params)
 }
 
 func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
@@ -25,8 +25,8 @@ func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*models.Us
 func TestUserService_CreateUser(t *testing.T) {
 	t.Run("create user successfully", func(t *testing.T) {
 		repo := &mockUserRepository{
-			createFunc: func(ctx context.Context, user *repositories.CreateUserParams) (*models.User, error) {
-				return &models.User{ID: "user-001", Username: user.Username, Email: user.Email}, nil
+			createFunc: func(ctx context.Context, params *repositories.CreateUserParams) (*models.User, error) {
+				return &models.User{ID: "user-001", Username: params.Username, Email: params.Email}, nil
 			},
 			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
 				return &models.User{ID: id, Username: "John Doe", Email: "john.doe@example.com"}, nil
@@ -35,7 +35,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		createdUser, err := service.CreateUser(context.Background(), repositories.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"})
+		createdUser, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -50,7 +50,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		_, err := service.CreateUser(context.Background(), repositories.CreateUserParams{Username: "", Email: "john.doe@example.com"})
+		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "", Email: "john.doe@example.com"})
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -61,7 +61,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		_, err := service.CreateUser(context.Background(), repositories.CreateUserParams{Username: "John Doe", Email: ""})
+		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: ""})
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -78,7 +78,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		user, err := service.GetUserByID(context.Background(), "user-001")
+		user, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: "user-001"})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -93,7 +93,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 		service := services.NewUserService(repo)
 
-		_, err := service.GetUserByID(context.Background(), "")
+		_, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: ""})
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
