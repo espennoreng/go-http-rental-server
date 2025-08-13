@@ -22,7 +22,6 @@ func NewServer(
 	userHandler := NewUserHandler(userService)
 	organizationHandler := NewOrganizationHandler(organizationService)
 	organizationUserHandler := NewOrganizationUserHandler(organizationUserService)
-	accessHandler := NewAccessHandler(accessService)
 
 	r := chi.NewRouter()
 
@@ -30,7 +29,7 @@ func NewServer(
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	setupRoutes(r, userHandler, organizationHandler, organizationUserHandler, accessHandler)
+	setupRoutes(r, userHandler, organizationHandler, organizationUserHandler)
 
 	return &Server{
 		router: r,
@@ -42,19 +41,9 @@ func setupRoutes(
 	userHandler *userHandler,
 	organizationHandler *organizationHandler,
 	organizationUserHandler *organizationUserHandler,
-	accessHandler *accessHandler,
 ) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to the Rental Server API"))
-	})
-
-	r.Route("/access", func(r chi.Router) {
-		r.Get("/is-admin/{orgID}/{userID}", func(w http.ResponseWriter, r *http.Request) {
-			accessHandler.IsAdmin(w, r)
-		})
-		r.Get("/is-member/{orgID}/{userID}", func(w http.ResponseWriter, r *http.Request) {
-			accessHandler.IsMember(w, r)
-		})
 	})
 
 	r.Route("/users", func(r chi.Router) {
