@@ -17,7 +17,6 @@ func NewServer(
 	userService services.UserService,
 	organizationService services.OrganizationService,
 	organizationUserService services.OrganizationUserService,
-	accessService services.AccessService,
 ) *Server {
 	userHandler := NewUserHandler(userService)
 	organizationHandler := NewOrganizationHandler(organizationService)

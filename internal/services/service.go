@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 )
 
 type CreateUserParams struct {
@@ -21,9 +20,18 @@ type UserService interface {
 	GetUserByID(ctx context.Context, params GetUserByIDParams) (*models.User, error)
 }
 
+type CreateOrganizationParams struct {
+	Name      string `json:"name"`
+	CreatedBy string `json:"created_by"`
+}
+
+type GetOrganizationByIDParams struct {
+	ID string `json:"id"`
+}
+
 type OrganizationService interface {
-	CreateOrganization(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error)
-	GetOrganizationByID(ctx context.Context, id string) (*models.Organization, error)
+	CreateOrganization(ctx context.Context, params CreateOrganizationParams) (*models.Organization, error)
+	GetOrganizationByID(ctx context.Context, params GetOrganizationByIDParams) (*models.Organization, error)
 }
 
 type CreateOrganizationUserParams struct {
@@ -55,9 +63,4 @@ type OrganizationUserService interface {
 	GetUsersByOrganizationID(ctx context.Context, params GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error)
 	UpdateUserRole(ctx context.Context, params UpdateUserRoleParams) error
 	DeleteUserFromOrganization(ctx context.Context, params DeleteOrganizationUserParams) error
-}
-
-type AccessService interface {
-	IsAdmin(ctx context.Context, orgID, userID string) (bool, error)
-	IsMember(ctx context.Context, orgID, userID string) (bool, error)
 }

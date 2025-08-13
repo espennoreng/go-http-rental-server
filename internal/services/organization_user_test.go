@@ -58,8 +58,7 @@ func TestOrganizationUserService_Create(t *testing.T) {
 		},
 	}
 
-	accessService := services.NewAccessService(mockRepo)
-	service := services.NewOrganizationUserService(mockRepo, accessService)
+	service := services.NewOrganizationUserService(mockRepo)
 
 	t.Run("successful creation", func(t *testing.T) {
 		orgID := uuid.New().String()
@@ -166,8 +165,7 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 			}, nil
 		},
 	}
-	accessService := services.NewAccessService(mockRepo)
-	service := services.NewOrganizationUserService(mockRepo, accessService)
+	service := services.NewOrganizationUserService(mockRepo)
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		users, err := service.GetUsersByOrganizationID(ctx, services.GetUsersByOrganizationIDParams{
@@ -224,8 +222,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 			}, nil
 		},
 	}
-	accessService := services.NewAccessService(mockRepo)
-	service := services.NewOrganizationUserService(mockRepo, accessService)
+	service := services.NewOrganizationUserService(mockRepo)
 
 	t.Run("successful role update", func(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{

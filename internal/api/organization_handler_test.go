@@ -9,30 +9,29 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
 
 type mockOrganizationService struct {
-	createOrganizationFunc  func(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error)
-	getOrganizationByIDFunc func(ctx context.Context, id string) (*models.Organization, error)
+	createOrganizationFunc  func(ctx context.Context, params services.CreateOrganizationParams) (*models.Organization, error)
+	getOrganizationByIDFunc func(ctx context.Context, params services.GetOrganizationByIDParams) (*models.Organization, error)
 }
 
-func (m *mockOrganizationService) CreateOrganization(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error) {
-	return m.createOrganizationFunc(ctx, input)
+func (m *mockOrganizationService) CreateOrganization(ctx context.Context, params services.CreateOrganizationParams) (*models.Organization, error) {
+	return m.createOrganizationFunc(ctx, params)
 }
 
-func (m *mockOrganizationService) GetOrganizationByID(ctx context.Context, id string) (*models.Organization, error) {
-	return m.getOrganizationByIDFunc(ctx, id)
+func (m *mockOrganizationService) GetOrganizationByID(ctx context.Context, params services.GetOrganizationByIDParams) (*models.Organization, error) {
+	return m.getOrganizationByIDFunc(ctx, params)
 }
 
 func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 	mockService := &mockOrganizationService{
-		createOrganizationFunc: func(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error) {
+		createOrganizationFunc: func(ctx context.Context, params services.CreateOrganizationParams) (*models.Organization, error) {
 			return &models.Organization{
 				ID:   "org-001",
-				Name: input.Name,
+				Name: params.Name,
 			}, nil
 		},
 	}
@@ -54,8 +53,8 @@ func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 
 func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 	mockService := &mockOrganizationService{
-		getOrganizationByIDFunc: func(ctx context.Context, id string) (*models.Organization, error) {
-			if id == "org-001" {
+		getOrganizationByIDFunc: func(ctx context.Context, params services.GetOrganizationByIDParams) (*models.Organization, error) {
+			if params.ID == "org-001" {
 				return &models.Organization{
 					ID:   "org-001",
 					Name: "Existing Organization",

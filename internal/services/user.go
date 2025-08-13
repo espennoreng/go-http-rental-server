@@ -17,6 +17,8 @@ func NewUserService(userRepo repositories.UserRepository) *userService {
 	}
 }
 
+var _ UserService = (*userService)(nil)
+
 func (s *userService) CreateUser(ctx context.Context, params CreateUserParams) (*models.User, error) {
 	if params.Username == "" {
 		return nil, ErrInvalidInput

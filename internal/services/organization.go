@@ -17,17 +17,19 @@ func NewOrganizationService(orgRepo repositories.OrganizationRepository) *organi
 	}
 }
 
-func (s *organizationService) CreateOrganization(ctx context.Context, input repositories.CreateOrganizationParams) (*models.Organization, error) {
-	if input.Name == "" {
+var _ OrganizationService = (*organizationService)(nil)
+
+func (s *organizationService) CreateOrganization(ctx context.Context, params CreateOrganizationParams) (*models.Organization, error) {
+	if params.Name == "" {
 		return nil, ErrInvalidInput
 	}
-	if input.CreatedBy == "" {
+	if params.CreatedBy == "" {
 		return nil, ErrInvalidInput
 	}
 
 	newOrganization, err := s.orgRepo.Create(ctx, &repositories.CreateOrganizationParams{
-		Name:      input.Name,
-		CreatedBy: input.CreatedBy,
+		Name:      params.Name,
+		CreatedBy: params.CreatedBy,
 	})
 
 	if err != nil {
@@ -37,12 +39,12 @@ func (s *organizationService) CreateOrganization(ctx context.Context, input repo
 	return newOrganization, nil
 }
 
-func (s *organizationService) GetOrganizationByID(ctx context.Context, id string) (*models.Organization, error) {
-	if id == "" {
+func (s *organizationService) GetOrganizationByID(ctx context.Context, params GetOrganizationByIDParams) (*models.Organization, error) {
+	if params.ID == "" {
 		return nil, ErrInvalidInput
 	}
 
-	organization, err := s.orgRepo.GetByID(ctx, id)
+	organization, err := s.orgRepo.GetByID(ctx, params.ID)
 	if err != nil {
 		return nil, ErrInternalServer
 	}

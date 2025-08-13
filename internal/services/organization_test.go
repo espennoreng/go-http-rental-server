@@ -36,7 +36,7 @@ func TestOrganizationService_CreateOrganization(t *testing.T) {
 	service := services.NewOrganizationService(mockRepo)
 
 	t.Run("successful creation", func(t *testing.T) {
-		org, err := service.CreateOrganization(context.Background(), repositories.CreateOrganizationParams{
+		org, err := service.CreateOrganization(context.Background(), services.CreateOrganizationParams{
 			Name:      "Test Organization",
 			CreatedBy: "user-001",
 		})
@@ -55,7 +55,7 @@ func TestOrganizationService_GetOrganizationByID(t *testing.T) {
 	service := services.NewOrganizationService(mockRepo)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		org, err := service.GetOrganizationByID(context.Background(), "1")
+		org, err := service.GetOrganizationByID(context.Background(), services.GetOrganizationByIDParams{ID: "1"})
 		assert.NoError(t, err)
 		assert.NotNil(t, org)
 		assert.Equal(t, "Test Organization", org.Name)

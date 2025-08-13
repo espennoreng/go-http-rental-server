@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
@@ -21,7 +20,7 @@ func NewOrganizationHandler(organizationService services.OrganizationService) *o
 }
 
 func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
-	var input repositories.CreateOrganizationParams
+	var input services.CreateOrganizationParams
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -47,7 +46,7 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 func (h *organizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	org, err := h.organizationService.GetOrganizationByID(r.Context(), id)
+	org, err := h.organizationService.GetOrganizationByID(r.Context(), services.GetOrganizationByIDParams{ID: id})
 	if err != nil {
 		if errors.Is(err, services.ErrOrganizationNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())
