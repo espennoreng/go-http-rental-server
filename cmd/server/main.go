@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
 	"github.com/espennoreng/go-http-rental-server/internal/config"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories/postgres"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -18,7 +20,15 @@ import (
 
 func main() {
 	// 1. Load application configuration
-	cfg := config.New()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Could not load config: %v", err)
+	}
+
+	log.Printf("Loaded configuration for APP_ENV: %s", os.Getenv("APP_ENV"))
+	log.Printf("Database URL: %s", cfg.DatabaseURL)
+	log.Printf("Server Port: %s", cfg.Port)
+	log.Printf("Google OAuth Client ID: %s", cfg.GoogleOAuthClientID)
 
 	// 2. Establish database connection and run migrations
 	dbpool := connectToDB(cfg.DatabaseURL)
@@ -34,8 +44,10 @@ func main() {
 	organizationService := services.NewOrganizationService(organizationRepo)
 	organizationUserService := services.NewOrganizationUserService(organizationUserRepo, accessService)
 
+	tokenVerifier := &auth.GoogleTokenVerifier{}
+
 	// 4. Set up the HTTP server
-	server := api.NewServer(userService, organizationService, organizationUserService, accessService)
+	server := api.NewServer(cfg, tokenVerifier, userService, organizationService, organizationUserService, accessService)
 
 	// 5. Start the server using the port from the config
 	addr := fmt.Sprintf(":%s", cfg.Port)

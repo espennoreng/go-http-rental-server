@@ -1,9 +1,14 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+)
 
 type User struct {
 	ID        string
+	GoogleID  pgtype.Text
 	Username  string
 	Email     string
 	CreatedAt time.Time

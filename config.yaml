@@ -1,0 +1,7 @@
+# Default settings that can be overridden by environment-specific sections.
+default:
+  port: "8080"
+
+dev:
+  google_oauth_client_id: "443179989864-rdbm4dg49b7e8db351rp38vfquqaq2ru.apps.googleusercontent.com"
+

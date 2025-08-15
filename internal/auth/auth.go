@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
+
+	"google.golang.org/api/idtoken"
 )
 
 // ctxKey is an unexported type to prevent context key collisions.
@@ -31,3 +33,17 @@ func FromContext(ctx context.Context) (Identity, error) {
 	}
 	return identity, nil
 }
+
+type TokenVerifier interface {
+	Verify(ctx context.Context, idToken, audience string) (*idtoken.Payload, error)
+}
+
+type GoogleTokenVerifier struct {}
+
+func (v *GoogleTokenVerifier) Verify(ctx context.Context, idToken, audience string) (*idtoken.Payload, error) {
+	if idToken == "" {
+		return nil, errors.New("idToken is required")
+	}
+	return idtoken.Validate(ctx, idToken, audience)
+}
+

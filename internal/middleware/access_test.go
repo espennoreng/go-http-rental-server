@@ -39,7 +39,7 @@ func TestAccessMiddleware_RequireAdmin_AllowsAdminUser(t *testing.T) {
 	}
 
 	accessMiddleware := middleware.NewAccessMiddleware(mockSvc)
-	handlerChain := middleware.TestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "admin-user"})
+	handlerChain := middleware.NewTestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "admin-user"})
 
 	router := chi.NewRouter()
 	router.Method(http.MethodGet, "/orgs/{orgID}", handlerChain)
@@ -71,7 +71,7 @@ func TestAccessMiddleware_RequireAdmin_BlocksNonAdminUser(t *testing.T) {
 	}
 
 	accessMiddleware := middleware.NewAccessMiddleware(mockSvc)
-	handlerChain := middleware.TestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "non-admin-user"})
+	handlerChain := middleware.NewTestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "non-admin-user"})
 
 	router := chi.NewRouter()
 	router.Method(http.MethodGet, "/orgs/{orgID}", handlerChain)

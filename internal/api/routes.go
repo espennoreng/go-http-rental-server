@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/config"
 	customMiddleware "github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
@@ -14,6 +16,9 @@ type Server struct {
 }
 
 func NewServer(
+	cfg *config.AppConfig,
+	verifier auth.TokenVerifier,
+
 	userService services.UserService,
 	organizationService services.OrganizationService,
 	organizationUserService services.OrganizationUserService,
@@ -29,7 +34,7 @@ func NewServer(
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	setupRoutes(r, userHandler, organizationHandler, organizationUserHandler, accessService)
+	setupRoutes(r, cfg, verifier, userService, userHandler, organizationHandler, organizationUserHandler, accessService)
 
 	return &Server{
 		router: r,
@@ -38,12 +43,16 @@ func NewServer(
 
 func setupRoutes(
 	r chi.Router,
+	cfg *config.AppConfig,
+	verifier auth.TokenVerifier,
+	userService services.UserService,
 	userHandler *userHandler,
 	organizationHandler *organizationHandler,
 	organizationUserHandler *organizationUserHandler,
 	accessService services.AccessService,
 ) {
 
+	authMiddleware := customMiddleware.NewAuthMiddleware(verifier, userService, cfg.GoogleOAuthClientID)
 	accessMiddleware := customMiddleware.NewAccessMiddleware(accessService)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +64,7 @@ func setupRoutes(
 			userHandler.CreateUser(w, r)
 		})
 
-		r.With(customMiddleware.AuthMiddleware).Route("/{id}", func(r chi.Router) {
+		r.With(authMiddleware).Route("/{id}", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				userHandler.GetUserByID(w, r)
 			})
@@ -63,7 +72,7 @@ func setupRoutes(
 	})
 
 	r.Route("/organizations", func(r chi.Router) {
-		r.Use(customMiddleware.AuthMiddleware)
+		r.Use(authMiddleware)
 
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			organizationHandler.CreateOrganization(w, r)

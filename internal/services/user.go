@@ -51,3 +51,16 @@ func (s *userService) GetUserByID(ctx context.Context, params GetUserByIDParams)
 
 	return user, nil
 }
+
+func (s *userService) FindOrCreateByGoogleID(ctx context.Context, googleID, email string) (*models.User, error) {
+	if googleID == "" || email == "" {
+		return nil, ErrInvalidInput
+	}
+
+	user, err := s.userRepo.FindOrCreateByGoogleID(ctx, googleID, email)
+	if err != nil {
+		return nil, ErrInternalServer
+	}
+
+	return user, nil
+}

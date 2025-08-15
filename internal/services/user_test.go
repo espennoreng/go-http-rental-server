@@ -12,6 +12,7 @@ import (
 type mockUserRepository struct {
 	createFunc  func(ctx context.Context, params *repositories.CreateUserParams) (*models.User, error)
 	getByIDFunc func(ctx context.Context, id string) (*models.User, error)
+	findOrCreateByGoogleIDFunc func(ctx context.Context, googleID, email string) (*models.User, error)
 }
 
 func (m *mockUserRepository) Create(ctx context.Context, params *repositories.CreateUserParams) (*models.User, error) {
@@ -20,6 +21,10 @@ func (m *mockUserRepository) Create(ctx context.Context, params *repositories.Cr
 
 func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	return m.getByIDFunc(ctx, id)
+}
+
+func (m *mockUserRepository) FindOrCreateByGoogleID(ctx context.Context, googleID, email string) (*models.User, error) {
+	return m.findOrCreateByGoogleIDFunc(ctx, googleID, email)
 }
 
 func TestUserService_CreateUser(t *testing.T) {

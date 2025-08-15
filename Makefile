@@ -1,25 +1,35 @@
 # Makefile for the Go HTTP Rental Server
 
+# Define the environment, defaulting to 'dev'.
+# This aligns with the expected values in the Go config loader (dev, staging, prod).
+# You can override this from the command line, e.g., make run ENV=staging
+ENV ?= dev
+
+# Include variables from the corresponding .env file (e.g., .env.dev) and export them.
+# The '-' prefix prevents an error if the file doesn't exist.
+-include .env.$(ENV)
+export
+
 # Define the name of the output binary
 BINARY_NAME=rental-server
-
-# Define the default database URL for development.
-# This can be overridden from the command line, e.g., make run DB_URL=...
-DATABASE_URL="postgres://devuser:devpassword@localhost:5432/rentaldb?sslmode=disable"
 
 # Phony targets are targets that are not files.
 .PHONY: all run test clean db-up db-down db-logs migrate-up tidy build
 
-all: build run
+# The default target now just runs the application.
+all: run
 
 # ====================================================================================
 # Development Commands
 # ====================================================================================
 
-## run: Builds and runs the application.
-run: build
+## run: Runs the application using 'go run'.
+# This avoids potential issues with stale binaries from a separate build step.
+run:
 	@echo "Running the application..."
-	@DATABASE_URL=${DATABASE_URL} ./$(BINARY_NAME)
+	# Set APP_ENV so the Go application loads the correct .env file.
+	# The DATABASE_URL is automatically inherited from the environment.
+	@APP_ENV=$(ENV) go run ./cmd/server/main.go
 
 ## test: Runs all tests in the project.
 test:
@@ -57,6 +67,7 @@ db-logs:
 ## migrate-up: Applies all 'up' database migrations.
 migrate-up:
 	@echo "Applying database migrations..."
+	# The DATABASE_URL is now automatically available from the .env file.
 	@migrate -database "${DATABASE_URL}" -path migrations up
 
 ## migrate-down: Rolls back the last applied migration.
@@ -73,7 +84,7 @@ migrate-status:
 # Build and Cleanup Commands
 # ====================================================================================
 
-## build: Compiles the application into a binary.
+## build: Compiles the application into a binary for deployment.
 build:
 	@echo "Building binary..."
 	@go build -o $(BINARY_NAME) ./cmd/server/main.go

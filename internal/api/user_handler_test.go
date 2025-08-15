@@ -20,6 +20,7 @@ import (
 type mockUserService struct {
 	createUserFunc  func(ctx context.Context, params services.CreateUserParams) (*models.User, error)
 	getUserByIDFunc func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error)
+	findOrCreateByGoogleIDFunc func(ctx context.Context, googleID, email string) (*models.User, error)
 }
 
 func (m *mockUserService) CreateUser(ctx context.Context, params services.CreateUserParams) (*models.User, error) {
@@ -28,6 +29,10 @@ func (m *mockUserService) CreateUser(ctx context.Context, params services.Create
 
 func (m *mockUserService) GetUserByID(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
 	return m.getUserByIDFunc(ctx, params)
+}
+
+func (m *mockUserService) FindOrCreateByGoogleID(ctx context.Context, googleID, email string) (*models.User, error) {
+	return m.findOrCreateByGoogleIDFunc(ctx, googleID, email)
 }
 
 func TestUserHandler_CreateUser(t *testing.T) {
@@ -164,7 +169,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService)
-		authedHandler := middleware.TestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)
 
@@ -187,7 +192,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService)
 
-		authedHandler := middleware.TestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)
 
@@ -209,7 +214,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService)
-		authedHandler := middleware.TestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)
 
 		req := httptest.NewRequest(http.MethodGet, "/users/user-001", nil)

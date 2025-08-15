@@ -49,7 +49,7 @@ func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 		r := chi.NewRouter()
 		handler := api.NewOrganizationHandler(mockService)
 
-		authedHandler := middleware.TestAuthMiddleware(http.HandlerFunc(handler.CreateOrganization), auth.Identity{UserID: userID})
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateOrganization), auth.Identity{UserID: userID})
 		r.Method(http.MethodPost, "/organizations", authedHandler)
 
 		reqBody := fmt.Sprintf(`{"name": "%s"}`, newOrgName)
@@ -117,7 +117,7 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 		accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
 		memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetOrganizationByID))
-		authedHandler := middleware.TestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: actingUserID})
+		authedHandler := middleware.NewTestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: actingUserID})
 
 		r.Method(http.MethodGet, "/organizations/{orgID}", authedHandler)
 

@@ -18,6 +18,7 @@ type GetUserByIDParams struct {
 type UserService interface {
 	CreateUser(ctx context.Context, params CreateUserParams) (*models.User, error)
 	GetUserByID(ctx context.Context, params GetUserByIDParams) (*models.User, error)
+	FindOrCreateByGoogleID(ctx context.Context, googleID, email string) (*models.User, error)
 }
 
 type CreateOrganizationParams struct {
