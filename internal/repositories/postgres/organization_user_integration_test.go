@@ -132,7 +132,7 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NotNil(t, orgUsers)
 		// Check that the found organization users match the created ones
 		require.Len(t, orgUsers, 1)
-		require.Equal(t, user.ID, orgUsers[0].ID)
+		require.Equal(t, user.ID, orgUsers[0].User.ID)
 	})
 
 	t.Run("GetUsersByOrganizationID_InvalidID", func(t *testing.T) {

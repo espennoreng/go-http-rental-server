@@ -3,13 +3,11 @@ package models
 import "time"
 
 type Organization struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	CreatedBy string    `json:"created_by"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string  
+	Name      string  
+	CreatedBy string  
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-type CreateOrganizationInput struct {
-	Name string `json:"name"`
-}
+

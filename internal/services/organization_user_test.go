@@ -231,8 +231,8 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
 		assert.Len(t, users, 2)
-		assert.Equal(t, "john_doe", users[0].Username)
-		assert.Equal(t, "john_doe@example.com", users[0].Email)
+		assert.Equal(t, "john_doe", users[0].User.Username)
+		assert.Equal(t, "john_doe@example.com", users[0].User.Email)
 		assert.Equal(t, models.RoleMember, users[0].Role)
 	})
 
