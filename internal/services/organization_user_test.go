@@ -282,7 +282,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			NewRole:      models.RoleMember,
+			Role:      models.RoleMember,
 		})
 		assert.NoError(t, err)
 	})
@@ -291,7 +291,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        "invalid-id",
 			ActingUserID: uuid.New().String(),
-			NewRole:      models.RoleAdmin,
+			Role:      models.RoleAdmin,
 		})
 		assert.Error(t, err)
 	})
@@ -300,7 +300,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: "invalid-id",
-			NewRole:      models.RoleAdmin,
+			Role:      models.RoleAdmin,
 		})
 		assert.Error(t, err)
 	})
@@ -309,7 +309,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			NewRole:      "invalid-role",
+			Role:      "invalid-role",
 		})
 		assert.Error(t, err)
 	})
@@ -321,7 +321,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			NewRole:      models.RoleAdmin,
+			Role:      models.RoleAdmin,
 		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
@@ -338,7 +338,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			NewRole:      models.RoleAdmin,
+			Role:      models.RoleAdmin,
 		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUnauthorized, err)

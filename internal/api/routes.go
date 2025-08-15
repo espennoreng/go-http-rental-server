@@ -63,11 +63,10 @@ func setupRoutes(
 	r.Route("/organizations", func(r chi.Router) {
 		r.Use(customMiddleware.AuthMiddleware)
 
-		r.With(accessMiddleware.RequireAdmin).Route("/", func(r chi.Router) {
-			r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-				organizationHandler.CreateOrganization(w, r)
-			})
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			organizationHandler.CreateOrganization(w, r)
 		})
+
 		r.With(accessMiddleware.RequireMember).Route("/{id}", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				organizationHandler.GetOrganizationByID(w, r)

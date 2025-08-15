@@ -88,11 +88,11 @@ func (s *organizationUserService) UpdateUserRole(ctx context.Context, params Upd
 		return err
 	}
 
-	if !models.ValidRoles[params.NewRole] {
+	if !models.ValidRoles[params.Role] {
 		return ErrInvalidInput
 	}
 
-	err = s.orgUserRepo.UpdateRole(ctx, params.OrgID, params.ActingUserID, params.NewRole)
+	err = s.orgUserRepo.UpdateRole(ctx, params.OrgID, params.ActingUserID, params.Role)
 	if err != nil {
 		// Log the error to get more context
 		return ErrInternalServer

@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
-	"github.com/espennoreng/go-http-rental-server/internal/models"
-	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
@@ -36,12 +34,15 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 		return
 	}
 
-	var input struct {
-		UserID string      `json:"user_id"`
-		Role   models.Role `json:"role"`
-	}
+	var input AddUserToOrganizationRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -61,7 +62,9 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, newOrgUser)
+	response := toUserResponse(newOrgUser)
+
+	respondJSON(w, http.StatusCreated, response)
 }
 
 func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +74,13 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
 	}
+
 	orgID := chi.URLParam(r, "orgID")
+
+	if orgID == "" {
+		respondError(w, http.StatusBadRequest, "organization ID is required")
+		return
+	}
 
 	users, err := h.organizationUserService.GetUsersByOrganizationID(context.Background(), services.GetUsersByOrganizationIDParams{
 		OrgID:        orgID,
@@ -87,7 +96,9 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 		return
 	}
 
-	respondJSON(w, http.StatusOK, users)
+	response := toUsersResponse(users)
+
+	respondJSON(w, http.StatusOK, response)
 }
 
 func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
@@ -99,16 +110,27 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 
 	orgID := chi.URLParam(r, "orgID")
 
-	var input repositories.UpdateUserRoleParams
+	if orgID == "" {
+		respondError(w, http.StatusBadRequest, "organization ID is required")
+		return
+	}
+
+	var input UpdateUserRoleRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.organizationUserService.UpdateUserRole(context.Background(), services.UpdateUserRoleParams{
 		OrgID:        orgID,
 		ActingUserID: identity.UserID,
-		NewRole:      input.NewRole,
+		Role:      input.Role,
 	})
 
 	if err != nil {

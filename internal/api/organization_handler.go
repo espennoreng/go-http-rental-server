@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,13 +21,28 @@ func NewOrganizationHandler(organizationService services.OrganizationService) *o
 }
 
 func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
-	var input services.CreateOrganizationParams
+	identity, err := auth.FromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
+	var input CreateOrganizationRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	org, err := h.organizationService.CreateOrganization(r.Context(), input)
+	if err := input.Validate(); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	org, err := h.organizationService.CreateOrganization(r.Context(), services.CreateOrganizationParams{
+		Name:      input.Name,
+		CreatedBy: identity.UserID,
+	})
+	
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
@@ -40,7 +56,9 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, org)
+	response := toOrganizationResponse(org)
+
+	respondJSON(w, http.StatusCreated, response)
 }
 
 func (h *organizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http.Request) {

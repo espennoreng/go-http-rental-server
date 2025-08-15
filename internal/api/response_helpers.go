@@ -10,6 +10,7 @@ import (
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set(ContentType, ContentTypeJSON)
 	w.WriteHeader(status)
+	
 
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -17,6 +18,7 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 			// send a new response body since headers have already been sent.
 			log.Printf("failed to encode JSON response: %v", err)
 		}
+
 	}
 }
 

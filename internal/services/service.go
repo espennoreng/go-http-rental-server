@@ -49,7 +49,7 @@ type GetUsersByOrganizationIDParams struct {
 type UpdateUserRoleParams struct {
 	OrgID        string
 	ActingUserID string
-	NewRole      models.Role
+	Role         models.Role
 }
 
 type DeleteOrganizationUserParams struct {
