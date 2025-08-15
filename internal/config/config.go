@@ -56,11 +56,11 @@ func Load() (*AppConfig, error) {
 
 	appConfig := cfgFile.Default
 	switch env {
-	case "dev":
+	case "development":
 		merge(&appConfig, cfgFile.Dev)
 	case "staging":
 		merge(&appConfig, cfgFile.Staging)
-	case "prod":
+	case "production":
 		merge(&appConfig, cfgFile.Prod)
 	default:
 		return nil, fmt.Errorf("invalid APP_ENV specified: '%s'", env)

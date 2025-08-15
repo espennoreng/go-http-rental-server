@@ -3,7 +3,7 @@
 # Define the environment, defaulting to 'dev'.
 # This aligns with the expected values in the Go config loader (dev, staging, prod).
 # You can override this from the command line, e.g., make run ENV=staging
-ENV ?= dev
+ENV ?= development
 
 # Include variables from the corresponding .env file (e.g., .env.dev) and export them.
 # The '-' prefix prevents an error if the file doesn't exist.
