@@ -39,7 +39,7 @@ func (m *mockOrganizationUserRepository) GetByID(ctx context.Context, orgID, use
 }
 
 type mockAccessService struct {
-	IsAdminFunc func(ctx context.Context, params services.OrgAccessParams) error
+	IsAdminFunc  func(ctx context.Context, params services.OrgAccessParams) error
 	IsMemberFunc func(ctx context.Context, params services.OrgAccessParams) error
 }
 
@@ -220,7 +220,7 @@ func TestOrganizationUserService_GetUsersByOrganizationID(t *testing.T) {
 			return services.ErrUnauthorized
 		},
 	}
-	
+
 	service := services.NewOrganizationUserService(mockRepo, accessService)
 
 	t.Run("successful retrieval", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			Role:      models.RoleMember,
+			Role:         models.RoleMember,
 		})
 		assert.NoError(t, err)
 	})
@@ -291,7 +291,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        "invalid-id",
 			ActingUserID: uuid.New().String(),
-			Role:      models.RoleAdmin,
+			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
 	})
@@ -300,7 +300,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: "invalid-id",
-			Role:      models.RoleAdmin,
+			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
 	})
@@ -309,7 +309,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			Role:      "invalid-role",
+			Role:         "invalid-role",
 		})
 		assert.Error(t, err)
 	})
@@ -321,7 +321,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			Role:      models.RoleAdmin,
+			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUserNotPartOfOrganization, err)
@@ -338,7 +338,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
-			Role:      models.RoleAdmin,
+			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
 		assert.Equal(t, services.ErrUnauthorized, err)

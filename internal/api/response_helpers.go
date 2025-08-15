@@ -10,7 +10,6 @@ import (
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set(ContentType, ContentTypeJSON)
 	w.WriteHeader(status)
-	
 
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {

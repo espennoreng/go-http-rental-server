@@ -40,7 +40,7 @@ func (m *mockOrganizationUserService) DeleteUserFromOrganization(ctx context.Con
 }
 
 type mockAccessService struct {
-	isAdminFunc func(ctx context.Context, params services.OrgAccessParams) error
+	isAdminFunc  func(ctx context.Context, params services.OrgAccessParams) error
 	isMemberFunc func(ctx context.Context, params services.OrgAccessParams) error
 }
 
@@ -156,7 +156,6 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService)
 	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
-
 
 	memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetUsersByOrganizationID))
 	authedHandler := middleware.TestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: userID})

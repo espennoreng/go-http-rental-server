@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/espennoreng/go-http-rental-server/internal/auth"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,13 +21,22 @@ func NewUserHandler(userService services.UserService) *userHandler {
 }
 
 func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var params services.CreateUserParams
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+	var input CreateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	user, err := h.userService.CreateUser(r.Context(), params)
+	if err := input.Validate(); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.userService.CreateUser(r.Context(), services.CreateUserParams{
+		Username: input.Username,
+		Email:    input.Email,
+	})
+
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
@@ -40,10 +50,18 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, user)
+	response := NewUserResponse(user)
+
+	respondJSON(w, http.StatusCreated, response)
 }
 
 func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.FromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+
 	id := chi.URLParam(r, "id")
 
 	user, err := h.userService.GetUserByID(r.Context(), services.GetUserByIDParams{ID: id})

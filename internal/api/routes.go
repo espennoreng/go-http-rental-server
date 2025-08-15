@@ -55,8 +55,10 @@ func setupRoutes(
 			userHandler.CreateUser(w, r)
 		})
 
-		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-			userHandler.GetUserByID(w, r)
+		r.With(customMiddleware.AuthMiddleware).Route("/{id}", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				userHandler.GetUserByID(w, r)
+			})
 		})
 	})
 

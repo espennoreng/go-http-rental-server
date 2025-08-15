@@ -9,14 +9,14 @@ import (
 )
 
 type organizationUserService struct {
-	orgUserRepo repositories.OrganizationUserRepository
+	orgUserRepo   repositories.OrganizationUserRepository
 	accessService AccessService
 }
 
 // NewOrganizationUserService initializes a new organizationUserService.
 func NewOrganizationUserService(orgUserRepo repositories.OrganizationUserRepository, accessService AccessService) *organizationUserService {
 	return &organizationUserService{
-		orgUserRepo: orgUserRepo,
+		orgUserRepo:   orgUserRepo,
 		accessService: accessService,
 	}
 }
@@ -61,7 +61,7 @@ func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, pa
 // GetUsersByOrganizationID retrieves all users within an organization.
 func (s *organizationUserService) GetUsersByOrganizationID(ctx context.Context, params GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
 	err := s.accessService.IsMember(ctx, OrgAccessParams{
-		OrgID: params.OrgID,
+		OrgID:  params.OrgID,
 		UserID: params.ActingUserID,
 	})
 

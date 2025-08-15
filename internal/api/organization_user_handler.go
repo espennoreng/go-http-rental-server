@@ -29,8 +29,8 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 	}
 	orgID := chi.URLParam(r, "orgID")
 
-	if err != nil {
-		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+	if orgID == "" {
+		respondError(w, http.StatusBadRequest, "organization ID is required")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 		return
 	}
 
-	response := toUserResponse(newOrgUser)
+	response := NewOrganizationUserResponse(newOrgUser)
 
 	respondJSON(w, http.StatusCreated, response)
 }
@@ -96,7 +96,7 @@ func (h *organizationUserHandler) GetUsersByOrganizationID(w http.ResponseWriter
 		return
 	}
 
-	response := toUsersResponse(users)
+	response := NewOrganizationMembersResponse(users)
 
 	respondJSON(w, http.StatusOK, response)
 }
@@ -130,7 +130,7 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 	err = h.organizationUserService.UpdateUserRole(context.Background(), services.UpdateUserRoleParams{
 		OrgID:        orgID,
 		ActingUserID: identity.UserID,
-		Role:      input.Role,
+		Role:         input.Role,
 	})
 
 	if err != nil {

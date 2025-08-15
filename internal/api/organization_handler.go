@@ -42,7 +42,7 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		Name:      input.Name,
 		CreatedBy: identity.UserID,
 	})
-	
+
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidInput) {
 			respondError(w, http.StatusBadRequest, err.Error())
@@ -56,15 +56,25 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	response := toOrganizationResponse(org)
+	response := NewOrganizationResponse(org)
 
 	respondJSON(w, http.StatusCreated, response)
 }
 
 func (h *organizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	_, err := auth.FromContext(r.Context())
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
 
-	org, err := h.organizationService.GetOrganizationByID(r.Context(), services.GetOrganizationByIDParams{ID: id})
+	orgID := chi.URLParam(r, "orgID")
+	if orgID == "" {
+		respondError(w, http.StatusBadRequest, "organization ID is required")
+		return
+	}
+
+	org, err := h.organizationService.GetOrganizationByID(r.Context(), services.GetOrganizationByIDParams{ID: orgID})
 	if err != nil {
 		if errors.Is(err, services.ErrOrganizationNotFound) {
 			respondError(w, http.StatusNotFound, err.Error())

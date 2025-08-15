@@ -47,3 +47,17 @@ func (r *CreateOrganizationRequest) Validate() error {
 	return nil
 }
 
+type CreateUserRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+func (r *CreateUserRequest) Validate() error {
+	if r.Username == "" {
+		return errors.New("username is required")
+	}
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+	return nil
+}
