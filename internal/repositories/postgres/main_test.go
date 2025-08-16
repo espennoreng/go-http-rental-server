@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	repoPostgres "github.com/espennoreng/go-http-rental-server/internal/repositories/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -73,9 +74,9 @@ func TestMain(m *testing.M) {
 }
 
 type TestHelper struct {
-	dbpool      *pgxpool.Pool
-	orgRepo     *repoPostgres.OrganizationRepository
-	userRepo    *repoPostgres.UserRepository
+	dbpool   *pgxpool.Pool
+	orgRepo  *repoPostgres.OrganizationRepository
+	userRepo *repoPostgres.UserRepository
 	orgUserRepo *repoPostgres.OrganizationUserRepository
 }
 
@@ -85,10 +86,10 @@ func SetupTestHelper(t *testing.T) *TestHelper {
 	require.NoError(t, err)
 
 	return &TestHelper{
-		dbpool:      dbpool,
-		orgRepo:     repoPostgres.NewOrganizationRepository(dbpool),
-		userRepo:    repoPostgres.NewUserRepository(dbpool),
-		orgUserRepo: repoPostgres.NewOrganizationUserRepository(dbpool),
+		dbpool: dbpool,
+		orgRepo: repoPostgres.NewOrganizationRepository(dbpool, logger.NewTestLogger(t)),
+		userRepo: repoPostgres.NewUserRepository(dbpool, logger.NewTestLogger(t)),
+		orgUserRepo: repoPostgres.NewOrganizationUserRepository(dbpool, logger.NewTestLogger(t)),
 	}
 }
 

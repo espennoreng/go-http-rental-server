@@ -41,9 +41,9 @@ func main() {
 	defer dbpool.Close()
 
 	// 3. Set up dependencies (repositories, services)
-	userRepo := postgres.NewUserRepository(dbpool)
-	organizationRepo := postgres.NewOrganizationRepository(dbpool)
-	organizationUserRepo := postgres.NewOrganizationUserRepository(dbpool)
+	userRepo := postgres.NewUserRepository(dbpool, log)
+	organizationRepo := postgres.NewOrganizationRepository(dbpool, log)
+	organizationUserRepo := postgres.NewOrganizationUserRepository(dbpool, log)
 
 	accessService := services.NewAccessService(organizationUserRepo, log)
 	userService := services.NewUserService(userRepo, log)
