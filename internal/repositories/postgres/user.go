@@ -138,3 +138,4 @@ func (r *UserRepository) FindOrCreateByGoogleID(ctx context.Context, googleID, e
 	log.Info("New user created successfully", slog.String("user_id", user.ID))
 	return &user, tx.Commit(ctx)
 }
+

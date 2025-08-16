@@ -24,6 +24,14 @@ func NewUserHandler(userService services.UserService, log *slog.Logger) *userHan
 }
 
 func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	identity, err := auth.FromContext(r.Context())
+	if err != nil {
+		h.log.Error("Failed to retrieve user ID from context", slog.Any("error", err))
+		respondError(w, http.StatusUnauthorized, "user ID not found in context")
+		return
+	}
+	log := h.log.With(slog.String("acting_user_id", identity.UserID))
+
 	var input CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		h.log.Error("Failed to decode request body", slog.Any("error", err))
@@ -36,9 +44,7 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	log := h.log.With(slog.String("username", input.Username), slog.String("email", input.Email))
-	log.Info("Creating new user", slog.String("username", input.Username), slog.String("email", input.Email))
+	log.With(slog.String("username", input.Username), slog.String("email", input.Email)).Info("Creating user")
 
 	user, err := h.userService.CreateUser(r.Context(), services.CreateUserParams{
 		Username: input.Username,
@@ -69,12 +75,14 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
-	_, err := auth.FromContext(r.Context())
+	identity, err := auth.FromContext(r.Context())
 	if err != nil {
 		h.log.Error("User identity not found in request context", slog.Any("error", err))
 		respondError(w, http.StatusUnauthorized, "user ID not found in context")
 		return
 	}
+
+	log := h.log.With(slog.String("acting_user_id", identity.UserID))
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -83,14 +91,18 @@ func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log := h.log.With(slog.String("user_id", id))
 	log.Info("Fetching user by ID", slog.String("user_id", id))
 
-	user, err := h.userService.GetUserByID(r.Context(), services.GetUserByIDParams{ID: id})
+	user, err := h.userService.GetUserByID(r.Context(), services.GetUserByIDParams{UserID: id, ActingUserID: identity.UserID})
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			log.Warn("User not found", slog.Any("error", err))
 			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, services.ErrForbidden) {
+			log.Warn("Unauthorized access attempt", slog.Any("error", err))
+			respondError(w, http.StatusForbidden, err.Error())
 			return
 		}
 		log.Error("Internal error while fetching user by ID", slog.Any("error", err))

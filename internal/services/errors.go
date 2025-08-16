@@ -14,4 +14,5 @@ var (
 	ErrDuplicateInput                         = errors.New("duplicate input")
 	ErrUserNotPartOfOrganization              = errors.New("user is not part of the organization")
 	ErrUnauthorized                           = errors.New("unauthorized")
+	ErrForbidden                              = errors.New("forbidden")
 )

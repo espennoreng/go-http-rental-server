@@ -170,6 +170,6 @@ func (s *organizationUserService) DeleteUserFromOrganization(ctx context.Context
 	}
 
 	log.Info("User deleted successfully from organization", slog.String("user_id_deleted", params.UserIDToDelete))
-	
+
 	return nil
 }

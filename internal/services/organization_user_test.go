@@ -18,6 +18,7 @@ type mockOrganizationUserRepository struct {
 	UpdateUserRoleFunc           func(ctx context.Context, orgID, userID string, newRole models.Role) error
 	DeleteOrganizationUserFunc   func(ctx context.Context, orgID, userID string) error
 	GetByIDFunc                  func(ctx context.Context, orgID, userID string) (*models.OrganizationUser, error)
+	AreUsersInSameOrgFunc        func(ctx context.Context, params *repositories.AreUsersInSameOrgParams) (bool, error)
 }
 
 func (m *mockOrganizationUserRepository) Create(ctx context.Context, input *repositories.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
@@ -37,6 +38,10 @@ func (m *mockOrganizationUserRepository) Delete(ctx context.Context, orgID, user
 }
 func (m *mockOrganizationUserRepository) GetByID(ctx context.Context, orgID, userID string) (*models.OrganizationUser, error) {
 	return m.GetByIDFunc(ctx, orgID, userID)
+}
+
+func (m *mockOrganizationUserRepository) AreUsersInSameOrg(ctx context.Context, params *repositories.AreUsersInSameOrgParams) (bool, error) {
+	return m.AreUsersInSameOrgFunc(ctx, params)
 }
 
 type mockAccessService struct {

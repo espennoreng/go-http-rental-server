@@ -39,7 +39,9 @@ func TestUserService_CreateUser(t *testing.T) {
 			},
 		}
 
-		service := services.NewUserService(repo, logger.NewTestLogger(t))
+		orgUserRepo := &mockOrganizationUserRepository{}
+
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
 
 		createdUser, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"})
 		if err != nil {
@@ -53,8 +55,9 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("create user with empty username", func(t *testing.T) {
 		repo := &mockUserRepository{}
+		orgUserRepo := &mockOrganizationUserRepository{}
 
-		service := services.NewUserService(repo, logger.NewTestLogger(t))
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
 
 		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "", Email: "john.doe@example.com"})
 		if err == nil {
@@ -64,8 +67,9 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("create user with empty email", func(t *testing.T) {
 		repo := &mockUserRepository{}
+		orgUserRepo := &mockOrganizationUserRepository{}
 
-		service := services.NewUserService(repo, logger.NewTestLogger(t))
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
 
 		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: ""})
 		if err == nil {
@@ -75,16 +79,25 @@ func TestUserService_CreateUser(t *testing.T) {
 }
 
 func TestUserService_GetUserByID(t *testing.T) {
-	t.Run("get user by ID successfully", func(t *testing.T) {
+	t.Run("get yourself successfully", func(t *testing.T) {
 		repo := &mockUserRepository{
 			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
 				return &models.User{ID: id, Username: "John Doe", Email: "john.doe@example.com"}, nil
 			},
 		}
 
-		service := services.NewUserService(repo, logger.NewTestLogger(t))
+		orgUserRepo := &mockOrganizationUserRepository{
+			AreUsersInSameOrgFunc: func(ctx context.Context, params *repositories.AreUsersInSameOrgParams) (bool, error) {
+				if params.UserID1 == params.UserID2 {
+					return true, nil
+				}
+				return false, nil
+			},
+		}
 
-		user, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: "user-001"})
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
+
+		user, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{UserID: "user-001", ActingUserID: "user-001"})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -96,10 +109,32 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	t.Run("get user by empty ID", func(t *testing.T) {
 		repo := &mockUserRepository{}
+		orgUserRepo := &mockOrganizationUserRepository{}
 
-		service := services.NewUserService(repo, logger.NewTestLogger(t))
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
 
-		_, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: ""})
+		_, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{UserID: "", ActingUserID: "user-001"})
+		if err == nil {
+			t.Fatal("expected error, got none")
+		}
+	})
+
+	t.Run("get someone from different org", func(t *testing.T) {
+		repo := &mockUserRepository{
+			getByIDFunc: func(ctx context.Context, id string) (*models.User, error) {
+				return &models.User{ID: id, Username: "Jane Doe", Email: "jane.doe@example.com"}, nil
+			},
+		}
+
+		orgUserRepo := &mockOrganizationUserRepository{
+			AreUsersInSameOrgFunc: func(ctx context.Context, params *repositories.AreUsersInSameOrgParams) (bool, error) {
+				return false, nil
+			},
+		}
+
+		service := services.NewUserService(repo, orgUserRepo, logger.NewTestLogger(t))
+
+		_, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{UserID: "user-002", ActingUserID: "user-001"})
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}

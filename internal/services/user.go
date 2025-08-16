@@ -10,12 +10,14 @@ import (
 
 type userService struct {
 	userRepo repositories.UserRepository
+	orgUserRepo repositories.OrganizationUserRepository
 	log      *slog.Logger
 }
 
-func NewUserService(userRepo repositories.UserRepository, log *slog.Logger) *userService {
+func NewUserService(userRepo repositories.UserRepository, orgUserRepo repositories.OrganizationUserRepository, log *slog.Logger) *userService {
 	return &userService{
-		userRepo: userRepo,
+		userRepo:  userRepo,
+		orgUserRepo: orgUserRepo,
 		log:      log.With("component", "user_service"),
 	}
 }
@@ -55,24 +57,50 @@ func (s *userService) CreateUser(ctx context.Context, params CreateUserParams) (
 }
 
 func (s *userService) GetUserByID(ctx context.Context, params GetUserByIDParams) (*models.User, error) {
-	log := s.log.With("user_id", params.ID)
+    // 1. Establish a clear logging context with both relevant IDs.
+    log := s.log.With(
+        slog.String("target_user_id", params.UserID),
+        slog.String("acting_user_id", params.ActingUserID),
+    )
 
-	if params.ID == "" {
-		log.Warn("GetUserByID called with empty ID")
-		return nil, ErrInvalidInput
-	}
+    // 2. Validate input.
+    if params.UserID == "" {
+        log.Warn("GetUserByID called with an empty target ID")
+        return nil, ErrInvalidInput
+    }
 
-	log.Info("Retrieving user by ID")
+    log.Info("Attempting to retrieve user")
 
-	user, err := s.userRepo.GetByID(ctx, params.ID)
-	if err != nil {
-		log.Error("Error retrieving user by ID", "error", err)
-		return nil, ErrInternalServer
-	}
+    // 3. Perform authorization checks.
+    // A user is always allowed to view themselves.
+    isRequestingSelf := params.ActingUserID == params.UserID
+    if !isRequestingSelf {
+        // If not requesting self, check if they are in the same organization.
+        inSameOrg, err := s.orgUserRepo.AreUsersInSameOrg(ctx, &repositories.AreUsersInSameOrgParams{
+			UserID1: params.ActingUserID,
+			UserID2: params.UserID,
+        })
 
-	log.Info("User retrieved successfully", "user_id", user.ID)
+        if err != nil {
+            log.Error("Failed to check organizational relationship", "error", err)
+            return nil, ErrInternalServer
+        }
 
-	return user, nil
+        if !inSameOrg {
+            log.Warn("Authorization failed: user attempted to access user outside their organization")
+            return nil, ErrForbidden
+        }
+    }
+
+    // 4. If authorized, retrieve the user from the repository.
+    user, err := s.userRepo.GetByID(ctx, params.UserID)
+    if err != nil {        
+        log.Error("Failed to retrieve user from repository", "error", err)
+        return nil, ErrInternalServer
+    }
+
+    log.Info("User retrieved successfully")
+    return user, nil
 }
 
 func (s *userService) FindOrCreateByGoogleID(ctx context.Context, googleID, email string) (*models.User, error) {

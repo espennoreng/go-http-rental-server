@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/espennoreng/go-http-rental-server/internal/config"
+	"github.com/lmittmann/tint"
 )
 
 func New(env config.Env) *slog.Logger {
@@ -15,9 +17,11 @@ func New(env config.Env) *slog.Logger {
 	switch env {
 	case config.Development:
 		// Use a more readable handler for development.
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug, // Log all levels in development.
+		handler = tint.NewHandler(os.Stdout, &tint.Options{
+			Level:      slog.LevelDebug, // Log all levels in development.
+			TimeFormat: time.Kitchen,
 		})
+		
 	default:
 		// Use JSON for production, which is better for log collectors.
 		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{

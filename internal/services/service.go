@@ -12,7 +12,8 @@ type CreateUserParams struct {
 }
 
 type GetUserByIDParams struct {
-	ID string `json:"id"`
+	ActingUserID string `json:"acting_user_id"`
+	UserID       string `json:"user_id"`
 }
 
 type UserService interface {

@@ -138,3 +138,27 @@ func (r *OrganizationUserRepository) UpdateRole(ctx context.Context, orgID strin
 	r.log.Info("Organization user role updated successfully", slog.String("org_id", orgID), slog.String("user_id", userID), slog.String("role", string(role)))
 	return nil
 }
+
+func (r *OrganizationUserRepository) AreUsersInSameOrg(ctx context.Context, params *repositories.AreUsersInSameOrgParams) (bool, error) {
+    query := `
+        SELECT EXISTS (
+            SELECT 1
+            FROM organization_users ou1
+            JOIN organization_users ou2 ON ou1.organization_id = ou2.organization_id
+            WHERE ou1.user_id = $1 AND ou2.user_id = $2
+        );
+    `
+
+	r.log.Debug("Executing database query", slog.String("query", query), slog.String("user_id1", params.UserID1), slog.String("user_id2", params.UserID2))
+
+    var exists bool
+    err := r.db.QueryRow(ctx, query, params.UserID1, params.UserID2).Scan(&exists)
+    if err != nil {
+		r.log.Error("Failed to check if users are in the same organization", slog.Any("error", err))
+        return false, err
+    }
+
+	r.log.Info("Checked if users are in the same organization", slog.String("user_id1", params.UserID1), slog.String("user_id2", params.UserID2), slog.Bool("same_org", exists))
+
+    return exists, nil
+}

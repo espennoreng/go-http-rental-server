@@ -69,4 +69,16 @@ func TestPostgresUserRepository(t *testing.T) {
 		_, err := th.userRepo.GetByID(ctx, randomID)
 		require.Error(t, err)
 	})
+
+	t.Run("FindOrCreateByGoogleID", func(t *testing.T) {
+		th.ResetDB(t)
+
+		googleID := "google-123"
+		email := "john.doe@example.com"
+
+		user, err := th.userRepo.FindOrCreateByGoogleID(ctx, googleID, email)
+		require.NoError(t, err)
+		require.NotNil(t, user)
+		require.Equal(t, email, user.Email)
+	})
 }

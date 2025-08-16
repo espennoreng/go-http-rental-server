@@ -157,7 +157,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 		mockService := &mockUserService{
 			getUserByIDFunc: func(ctx context.Context, params services.GetUserByIDParams) (*models.User, error) {
-				if params.ID == "user-001" {
+				if params.UserID == "user-001" {
 					return &models.User{
 						ID:       "user-001",
 						Username: "John Doe",

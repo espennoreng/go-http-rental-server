@@ -312,4 +312,60 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.Nil(t, orgUserRetrieved, "should return nil for non-existent organization user")
 	})
 
+	t.Run("AreUsersInSameOrganization", func(t *testing.T) {
+		th.ResetDB(t)
+
+		createOrgUser, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
+			Username: "Jane Doe",
+			Email:    "jane@example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, createOrgUser)
+
+		org, err := th.orgRepo.Create(ctx, &repositories.CreateOrganizationParams{
+			Name:      "Test Org",
+			CreatedBy: createOrgUser.ID,
+		})
+		
+		require.NoError(t, err)
+		require.NotNil(t, org)
+
+		user1, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
+			Username: "User One",
+			Email:    "user1@example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, user1)
+
+		user2, err := th.userRepo.Create(ctx, &repositories.CreateUserParams{
+			Username: "User Two",
+			Email:    "user2@example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, user2)
+
+		_, err = th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user1.ID,
+			Role:   models.RoleMember,
+		})
+		require.NoError(t, err)
+
+		_, err = th.orgUserRepo.Create(ctx, &repositories.CreateOrganizationUserParams{
+			OrgID:  org.ID,
+			UserID: user2.ID,
+			Role:   models.RoleMember,
+		})
+		require.NoError(t, err)
+
+		OK, err := th.orgUserRepo.AreUsersInSameOrg(ctx, &repositories.AreUsersInSameOrgParams{
+			UserID1: user1.ID,
+			UserID2: user2.ID,
+		})
+
+		require.NoError(t, err)
+		require.True(t, OK)
+	})
+
+
 }
