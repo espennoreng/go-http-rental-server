@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,6 +37,11 @@ func (r *OrganizationRepository) Create(ctx context.Context, params *repositorie
 	var org models.Organization
 	err := r.db.QueryRow(ctx, query, params.Name, params.CreatedBy).Scan(&org.ID, &org.Name, &org.CreatedBy, &org.CreatedAt, &org.UpdatedAt)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
+			r.log.Warn("Organization with the same name already exists", slog.Any("error", err))
+			return nil, repositories.ErrConflict
+		}
 		r.log.Error("Failed to create organization", slog.Any("error", err))
 		return nil, err
 	}

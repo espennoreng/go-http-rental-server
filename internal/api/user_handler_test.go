@@ -50,7 +50,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-		r.Post("/users", handler.CreateUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateUser), auth.Identity{UserID: "acting-user-001"})
+		r.Method(http.MethodPost, "/users", authedHandler)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString(reqBody))
@@ -76,7 +77,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-		r.Post("/users", handler.CreateUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateUser), auth.Identity{UserID: "acting-user-001"})
+		r.Method(http.MethodPost, "/users", authedHandler)
 
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString("invalid json"))
 		res := httptest.NewRecorder()
@@ -96,7 +98,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-		r.Post("/users", handler.CreateUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateUser), auth.Identity{UserID: "acting-user-001"})
+		r.Method(http.MethodPost, "/users", authedHandler)
 
 		reqBody := `{"email": "john.doe@example.com"}`
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString(reqBody))
@@ -117,7 +120,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-		r.Post("/users", handler.CreateUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateUser), auth.Identity{UserID: "acting-user-001"})
+		r.Method(http.MethodPost, "/users", authedHandler)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString(reqBody))
@@ -138,7 +142,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-		r.Post("/users", handler.CreateUser)
+		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateUser), auth.Identity{UserID: "acting-user-001"})
+		r.Method(http.MethodPost, "/users", authedHandler)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString(reqBody))
@@ -192,7 +197,6 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
-
 		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)

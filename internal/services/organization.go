@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
@@ -45,6 +46,10 @@ func (s *organizationService) CreateOrganization(ctx context.Context, params Cre
 	})
 
 	if err != nil {
+		if errors.Is(err, repositories.ErrConflict) {
+			log.Warn("Organization already exists", slog.Any("error", err))
+			return nil, ErrOrganizationWithDuplicateDetailsExists
+		}
 		log.Error("Failed to create organization", slog.Any("error", err))
 		return nil, ErrInternalServer
 	}

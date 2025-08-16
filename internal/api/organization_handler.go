@@ -31,9 +31,9 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	log := h.log.With(slog.String("user_id", identity.UserID))
+	log := h.log.With(slog.String("acting_user_id", identity.UserID))
 
-	log.Info("Attempting to create a new organization", slog.String("user_id", identity.UserID))
+	log.Info("Attempting to create a new organization")
 
 	var input CreateOrganizationRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -64,6 +64,7 @@ func (h *organizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 			respondError(w, http.StatusConflict, err.Error())
 			return
 		}
+		
 		log.Error("Failed to create organization due to internal error", slog.Any("error", err))
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return

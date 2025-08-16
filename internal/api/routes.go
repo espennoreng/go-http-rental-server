@@ -35,7 +35,7 @@ func NewServer(
 	r.Use(middleware.Recoverer)
 	r.Use(customMiddleware.NewSlogMiddleware(log))
 
-	setupRoutes(r, cfg, verifier, userService, userHandler, organizationHandler, organizationUserHandler, accessService)
+	setupRoutes(r, cfg, log, verifier, userService, userHandler, organizationHandler, organizationUserHandler, accessService)
 
 	return &Server{
 		router: r,
@@ -45,6 +45,7 @@ func NewServer(
 func setupRoutes(
 	r chi.Router,
 	cfg *config.AppConfig,
+	log *slog.Logger,
 	verifier auth.TokenVerifier,
 	userService services.UserService,
 	userHandler *userHandler,
@@ -53,7 +54,7 @@ func setupRoutes(
 	accessService services.AccessService,
 ) {
 
-	authMiddleware := customMiddleware.NewAuthMiddleware(verifier, userService, cfg.GoogleOAuthClientID)
+	authMiddleware := customMiddleware.NewAuthMiddleware(log, verifier, userService, cfg.GoogleOAuthClientID)
 	accessMiddleware := customMiddleware.NewAccessMiddleware(accessService)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +63,7 @@ func setupRoutes(
 
 	r.Route("/users", func(r chi.Router) {
 		r.Use(authMiddleware)
-		
+
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			userHandler.CreateUser(w, r)
 		})

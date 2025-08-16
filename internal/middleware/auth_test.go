@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/google/uuid"
@@ -73,7 +74,7 @@ func TestAuthMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer valid-token")
 		rr := httptest.NewRecorder()
 
-		middleware := NewAuthMiddleware(verifier, userService, "test-audience")
+		middleware := NewAuthMiddleware(logger.NewTestLogger(t), verifier, userService, "test-audience")
 		handler := middleware(testHandler)
 
 		// Act
@@ -93,7 +94,7 @@ func TestAuthMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer invalid-token")
 		rr := httptest.NewRecorder()
 
-		middleware := NewAuthMiddleware(verifier, userService, "test-audience")
+		middleware := NewAuthMiddleware(logger.NewTestLogger(t), verifier, userService, "test-audience")
 		handler := middleware(testHandler)
 
 		// Act
@@ -108,8 +109,8 @@ func TestAuthMiddleware(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest("GET", "/private", nil)
 		rr := httptest.NewRecorder()
-		
-		middleware := NewAuthMiddleware(&mockTokenVerifier{}, &mockUserService{}, "test-audience")
+
+		middleware := NewAuthMiddleware(logger.NewTestLogger(t), &mockTokenVerifier{}, &mockUserService{}, "test-audience")
 		handler := middleware(testHandler)
 
 		// Act
@@ -132,7 +133,7 @@ func TestAuthMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer valid-token")
 		rr := httptest.NewRecorder()
 
-		middleware := NewAuthMiddleware(verifier, userService, "test-audience")
+		middleware := NewAuthMiddleware(logger.NewTestLogger(t), verifier, userService, "test-audience")
 		handler := middleware(testHandler)
 
 		// Act
