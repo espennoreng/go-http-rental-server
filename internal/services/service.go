@@ -50,6 +50,7 @@ type GetUsersByOrganizationIDParams struct {
 type UpdateUserRoleParams struct {
 	OrgID        string
 	ActingUserID string
+	UserID      string
 	Role         models.Role
 }
 

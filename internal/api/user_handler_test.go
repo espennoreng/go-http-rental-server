@@ -10,6 +10,7 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -48,7 +49,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		r.Post("/users", handler.CreateUser)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
@@ -74,7 +75,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		mockService := &mockUserService{}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		r.Post("/users", handler.CreateUser)
 
 		req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString("invalid json"))
@@ -94,7 +95,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		r.Post("/users", handler.CreateUser)
 
 		reqBody := `{"email": "john.doe@example.com"}`
@@ -115,7 +116,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		r.Post("/users", handler.CreateUser)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
@@ -136,7 +137,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		r.Post("/users", handler.CreateUser)
 
 		reqBody := `{"username": "John Doe", "email": "john.doe@example.com"}`
@@ -168,7 +169,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)
@@ -190,7 +191,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 
 		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 
@@ -213,7 +214,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.GetUserByID), actingUser)
 		r.Method(http.MethodGet, "/users/{id}", authedHandler)
 
@@ -230,7 +231,7 @@ func TestUserHandler_GetUserByID(t *testing.T) {
 		mockService := &mockUserService{}
 
 		r := chi.NewRouter()
-		handler := api.NewUserHandler(mockService, api.NewTestLogger(t))
+		handler := api.NewUserHandler(mockService, logger.NewTestLogger(t))
 
 		r.Get("/users/{id}", handler.GetUserByID)
 

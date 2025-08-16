@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ func TestIsAdmin_Success(t *testing.T) {
 			return &models.OrganizationUser{Role: models.RoleAdmin}, nil
 		},
 	}
-	s := services.NewAccessService(mockRepo)
+	s := services.NewAccessService(mockRepo, logger.NewTestLogger(t))
 
 	// Act
 	err := s.IsAdmin(ctx, services.OrgAccessParams{OrgID: orgID, UserID: adminID})
@@ -44,7 +45,7 @@ func TestIsAdmin_FailsForNonAdmin(t *testing.T) {
 			return &models.OrganizationUser{Role: models.RoleMember}, nil
 		},
 	}
-	s := services.NewAccessService(mockRepo)
+	s := services.NewAccessService(mockRepo, logger.NewTestLogger(t))
 
 	// Act
 	err := s.IsAdmin(ctx, services.OrgAccessParams{OrgID: orgID, UserID: memberID})
@@ -65,7 +66,7 @@ func TestIsAdmin_FailsForUserNotInOrg(t *testing.T) {
 			return nil, nil // Simulate user not found
 		},
 	}
-	s := services.NewAccessService(mockRepo)
+	s := services.NewAccessService(mockRepo, logger.NewTestLogger(t))
 
 	// Act
 	err := s.IsAdmin(ctx, services.OrgAccessParams{OrgID: orgID, UserID: userID})
@@ -86,7 +87,7 @@ func TestIsAdmin_FailsOnRepositoryError(t *testing.T) {
 			return nil, errors.New("database connection failed")
 		},
 	}
-	s := services.NewAccessService(mockRepo)
+	s := services.NewAccessService(mockRepo, logger.NewTestLogger(t))
 
 	// Act
 	err := s.IsAdmin(ctx, services.OrgAccessParams{OrgID: orgID, UserID: userID})
@@ -100,7 +101,7 @@ func TestIsAdmin_FailsOnRepositoryError(t *testing.T) {
 func TestIsAdmin_FailsForInvalidUUID(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
-	s := services.NewAccessService(&mockOrganizationUserRepository{}) // Mock can be empty
+	s := services.NewAccessService(&mockOrganizationUserRepository{}, logger.NewTestLogger(t))
 
 	// Act
 	err := s.IsAdmin(ctx, services.OrgAccessParams{OrgID: uuid.New().String(), UserID: "invalid-uuid"})

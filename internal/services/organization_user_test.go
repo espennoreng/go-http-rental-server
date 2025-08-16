@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -50,6 +51,7 @@ func (m *mockAccessService) IsAdmin(ctx context.Context, params services.OrgAcce
 func (m *mockAccessService) IsMember(ctx context.Context, params services.OrgAccessParams) error {
 	return m.IsMemberFunc(ctx, params)
 }
+
 
 func TestOrganizationUserService_Create(t *testing.T) {
 	ctx := context.Background()
@@ -275,13 +277,14 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 			}, nil
 		},
 	}
-	accessService := services.NewAccessService(mockRepo)
+	accessService := services.NewAccessService(mockRepo, logger.NewTestLogger(t))
 	service := services.NewOrganizationUserService(mockRepo, accessService)
 
 	t.Run("successful role update", func(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
+			UserID:       uuid.New().String(),
 			Role:         models.RoleMember,
 		})
 		assert.NoError(t, err)
@@ -291,6 +294,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        "invalid-id",
 			ActingUserID: uuid.New().String(),
+			UserID:       uuid.New().String(),
 			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
@@ -300,6 +304,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: "invalid-id",
+			UserID:       uuid.New().String(),
 			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
@@ -309,6 +314,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
+			UserID:       uuid.New().String(),
 			Role:         "invalid-role",
 		})
 		assert.Error(t, err)
@@ -321,6 +327,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
+			UserID:       uuid.New().String(),
 			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)
@@ -338,6 +345,7 @@ func TestOrganizationUserService_UpdateUserRole(t *testing.T) {
 		err := service.UpdateUserRole(ctx, services.UpdateUserRoleParams{
 			OrgID:        uuid.New().String(),
 			ActingUserID: uuid.New().String(),
+			UserID:       uuid.New().String(),
 			Role:         models.RoleAdmin,
 		})
 		assert.Error(t, err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -33,7 +34,7 @@ func TestOrganizationService_CreateOrganization(t *testing.T) {
 		},
 	}
 
-	service := services.NewOrganizationService(mockRepo)
+	service := services.NewOrganizationService(mockRepo, logger.NewTestLogger(t))
 
 	t.Run("successful creation", func(t *testing.T) {
 		org, err := service.CreateOrganization(context.Background(), services.CreateOrganizationParams{
@@ -52,7 +53,7 @@ func TestOrganizationService_GetOrganizationByID(t *testing.T) {
 		},
 	}
 
-	service := services.NewOrganizationService(mockRepo)
+	service := services.NewOrganizationService(mockRepo, logger.NewTestLogger(t))
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		org, err := service.GetOrganizationByID(context.Background(), services.GetOrganizationByIDParams{ID: "1"})

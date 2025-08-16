@@ -11,6 +11,7 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -37,7 +38,7 @@ func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 	newOrgID := "org-001"
 	newOrgName := "New Organization"
 
-	logger := api.NewTestLogger(t)
+	logger := logger.NewTestLogger(t)
 
 	t.Run("successful organization creation", func(t *testing.T) {
 
@@ -91,7 +92,7 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 	orgID := "org-001"
 	orgName := "Test Organization"
 
-	logger := api.NewTestLogger(t)
+	logger := logger.NewTestLogger(t)
 
 	t.Run("successful organization retrieval", func(t *testing.T) {
 		mockService := &mockOrganizationService{

@@ -45,9 +45,9 @@ func main() {
 	organizationRepo := postgres.NewOrganizationRepository(dbpool)
 	organizationUserRepo := postgres.NewOrganizationUserRepository(dbpool)
 
-	accessService := services.NewAccessService(organizationUserRepo)
-	userService := services.NewUserService(userRepo)
-	organizationService := services.NewOrganizationService(organizationRepo)
+	accessService := services.NewAccessService(organizationUserRepo, log)
+	userService := services.NewUserService(userRepo, log)
+	organizationService := services.NewOrganizationService(organizationRepo, log)
 	organizationUserService := services.NewOrganizationUserService(organizationUserRepo, accessService)
 
 	tokenVerifier := &auth.GoogleTokenVerifier{}

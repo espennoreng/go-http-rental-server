@@ -11,6 +11,7 @@ import (
 
 	"github.com/espennoreng/go-http-rental-server/internal/api"
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -58,7 +59,7 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 	const orgID = "org-001"
 	const role = models.RoleMember
 
-	logger := api.NewTestLogger(t)
+	logger := logger.NewTestLogger(t)
 
 	mockService := &mockOrganizationUserService{
 		createOrganizationUserFunc: func(ctx context.Context, params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
@@ -122,7 +123,7 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 	const orgID = "org-001"
 	const userID = "user-001"
 
-	logger := api.NewTestLogger(t)
+	logger := logger.NewTestLogger(t)
 
 	mockService := &mockOrganizationUserService{
 		getUsersByOrganizationIDFunc: func(ctx context.Context, params services.GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
@@ -182,7 +183,7 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 	const userToDeleteID = "member-user-001"
 	const orgID = "org-001"
 
-	logger := api.NewTestLogger(t)
+	logger := logger.NewTestLogger(t)
 
 	mockService := &mockOrganizationUserService{
 		deleteUserFromOrganizationFunc: func(ctx context.Context, params services.DeleteOrganizationUserParams) error {

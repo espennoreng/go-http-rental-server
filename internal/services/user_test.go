@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
@@ -38,7 +39,7 @@ func TestUserService_CreateUser(t *testing.T) {
 			},
 		}
 
-		service := services.NewUserService(repo)
+		service := services.NewUserService(repo, logger.NewTestLogger(t))
 
 		createdUser, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: "john.doe@example.com"})
 		if err != nil {
@@ -53,7 +54,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	t.Run("create user with empty username", func(t *testing.T) {
 		repo := &mockUserRepository{}
 
-		service := services.NewUserService(repo)
+		service := services.NewUserService(repo, logger.NewTestLogger(t))
 
 		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "", Email: "john.doe@example.com"})
 		if err == nil {
@@ -64,7 +65,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	t.Run("create user with empty email", func(t *testing.T) {
 		repo := &mockUserRepository{}
 
-		service := services.NewUserService(repo)
+		service := services.NewUserService(repo, logger.NewTestLogger(t))
 
 		_, err := service.CreateUser(context.Background(), services.CreateUserParams{Username: "John Doe", Email: ""})
 		if err == nil {
@@ -81,7 +82,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 			},
 		}
 
-		service := services.NewUserService(repo)
+		service := services.NewUserService(repo, logger.NewTestLogger(t))
 
 		user, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: "user-001"})
 		if err != nil {
@@ -96,7 +97,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 	t.Run("get user by empty ID", func(t *testing.T) {
 		repo := &mockUserRepository{}
 
-		service := services.NewUserService(repo)
+		service := services.NewUserService(repo, logger.NewTestLogger(t))
 
 		_, err := service.GetUserByID(context.Background(), services.GetUserByIDParams{ID: ""})
 		if err == nil {
