@@ -131,8 +131,7 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, orgUsers)
 		// Check that the found organization users match the created ones
-		require.Len(t, orgUsers, 1)
-		require.Equal(t, user.ID, orgUsers[0].User.ID)
+		require.Len(t, orgUsers, 2, "should return two users since the creator is also included")
 	})
 
 	t.Run("GetUsersByOrganizationID_InvalidID", func(t *testing.T) {
@@ -184,8 +183,9 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		orgUsers, err := th.orgUserRepo.GetUsersByOrganizationID(ctx, org.ID)
 		require.NoError(t, err)
 		require.NotNil(t, orgUsers)
-		// Should return an empty slice since the user is not part of the first organization
-		require.Len(t, orgUsers, 0)
+		// Should return 1 user (the creator) since the user is not part of the first organization
+		require.Len(t, orgUsers, 1)
+		require.Equal(t, createOrgUser.ID, orgUsers[0].User.ID, "should return the creator of the organization")
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -223,7 +223,8 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		orgUsers, err := th.orgUserRepo.GetUsersByOrganizationID(ctx, org.ID)
 		require.NoError(t, err)
 		require.NotNil(t, orgUsers)
-		require.Len(t, orgUsers, 0, "should return an empty slice after deletion")
+		require.Len(t, orgUsers, 1, "should return one user (the creator) after deletion")
+		require.Equal(t, createOrgUser.ID, orgUsers[0].User.ID, "should return the creator of the organization after deletion")
 	})
 
 	t.Run("Update organization user role", func(t *testing.T) {
@@ -261,8 +262,8 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		// Verify that the role has been changed
 		orgUsers, err := th.orgUserRepo.GetUsersByOrganizationID(ctx, org.ID)
 		require.NoError(t, err)
-		require.Len(t, orgUsers, 1)
-		require.Equal(t, models.RoleAdmin, orgUsers[0].Role, "should have updated the role to admin")
+		require.Len(t, orgUsers, 2, "should return two users after role update")
+		require.Equal(t, models.RoleAdmin, orgUsers[1].Role, "should have updated the role to Admin")
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
@@ -326,7 +327,7 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 			Name:      "Test Org",
 			CreatedBy: createOrgUser.ID,
 		})
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, org)
 
