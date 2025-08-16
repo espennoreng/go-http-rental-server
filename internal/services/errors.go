@@ -15,4 +15,6 @@ var (
 	ErrUserNotPartOfOrganization              = errors.New("user is not part of the organization")
 	ErrUnauthorized                           = errors.New("unauthorized")
 	ErrForbidden                              = errors.New("forbidden")
+	ErrUserAlreadyHasARoleInOrganization = errors.New("user already has a role in the organization")
 )
+	

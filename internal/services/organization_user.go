@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
@@ -69,6 +70,10 @@ func (s *organizationUserService) CreateOrganizationUser(ctx context.Context, pa
 		Role:   params.Role,
 	})
 	if err != nil {
+		if errors.Is(err, repositories.ErrConflict) {
+			log.Warn("Organization user already exists", slog.Any("error", err))
+			return nil, ErrUserAlreadyHasARoleInOrganization
+		}
 		log.Error("Failed to create organization user", slog.Any("error", err))
 		return nil, ErrInternalServer
 	}

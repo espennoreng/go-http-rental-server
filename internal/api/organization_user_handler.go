@@ -69,6 +69,11 @@ func (h *organizationUserHandler) AddUserToOrganization(w http.ResponseWriter, r
 			respondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		if errors.Is(err, services.ErrUserAlreadyHasARoleInOrganization) {
+			log.Warn("User already has a role in the organization", slog.Any("error", err))
+			respondError(w, http.StatusConflict, err.Error())
+			return
+		}
 		log.Error("Failed to add user to organization", slog.Any("error", err))
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return

@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,6 +38,11 @@ func (r *OrganizationUserRepository) Create(ctx context.Context, params *reposit
 	var orgUser models.OrganizationUser
 	err := r.db.QueryRow(ctx, query, params.OrgID, params.UserID, time.Now(), params.Role).Scan(&orgUser.OrgID, &orgUser.UserID, &orgUser.CreatedAt, &orgUser.Role)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
+			r.log.Warn("Organization user already exists", slog.Any("error", err))
+			return nil, repositories.ErrConflict
+		}
 		r.log.Error("Failed to create organization user", slog.Any("error", err))
 		return nil, err
 	}

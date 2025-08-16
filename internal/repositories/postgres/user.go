@@ -8,6 +8,7 @@ import (
 	"github.com/espennoreng/go-http-rental-server/internal/models"
 	"github.com/espennoreng/go-http-rental-server/internal/repositories"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -39,6 +40,11 @@ func (r *UserRepository) Create(ctx context.Context, user *repositories.CreateUs
 	err := r.db.QueryRow(ctx, query, user.Username, user.Email).Scan(&newUser.ID, &newUser.Username, &newUser.Email, &newUser.CreatedAt, &newUser.UpdatedAt)
 
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique violation
+			r.log.Warn("User with the same email or username already exists", slog.Any("error", err))
+			return nil, repositories.ErrConflict
+		}
 		r.log.Error("Failed to create user", slog.Any("error", err))
 		return nil, err
 	}
