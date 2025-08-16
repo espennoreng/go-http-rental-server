@@ -93,7 +93,7 @@ func TestPostgresOrganizationUserRepository(t *testing.T) {
 		})
 		require.Error(t, err)
 		require.Nil(t, orgUserDup, "should return nil on duplicate creation")
-		require.Contains(t, err.Error(), "duplicate key value violates unique constraint")
+		require.Contains(t, err.Error(), repositories.ErrConflict.Error(), "should return conflict error on duplicate creation")
 	})
 
 	t.Run("GetByOrganizationID", func(t *testing.T) {

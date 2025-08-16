@@ -22,14 +22,10 @@ func (r *AddUserToOrganizationRequest) Validate() error {
 }
 
 type UpdateUserRoleRequest struct {
-	UserID string      `json:"user_id"`
 	Role   models.Role `json:"role"`
 }
 
 func (r *UpdateUserRoleRequest) Validate() error {
-	if r.UserID == "" {
-		return errors.New("user_id is required")
-	}
 	if r.Role == "" {
 		return errors.New("role is required")
 	}

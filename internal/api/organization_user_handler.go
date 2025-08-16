@@ -143,6 +143,13 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 		return
 	}
 
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		h.log.Warn("User ID is required for updating user role", slog.String("userID", userID))
+		respondError(w, http.StatusBadRequest, "user ID is required")
+		return
+	}
+
 	var input UpdateUserRoleRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -157,12 +164,13 @@ func (h *organizationUserHandler) UpdateUserRole(w http.ResponseWriter, r *http.
 		return
 	}
 
-	log := h.log.With(slog.String("user_id", identity.UserID), slog.String("org_id", orgID))
-	log.Info("Updating user role in organization", slog.String("user_id", input.UserID), slog.String("role", string(input.Role)))
+	log := h.log.With(slog.String("acting_user_id", identity.UserID), slog.String("org_id", orgID))
+	log.Info("Updating user role in organization", slog.String("user_id", userID), slog.String("role", string(input.Role)))
 
 	err = h.organizationUserService.UpdateUserRole(context.Background(), services.UpdateUserRoleParams{
 		OrgID:        orgID,
 		ActingUserID: identity.UserID,
+		UserID:       userID,
 		Role:         input.Role,
 	})
 

@@ -92,7 +92,7 @@ func setupRoutes(
 				organizationUserHandler.AddUserToOrganization(w, r)
 			})
 
-			r.Put("/{userID}/role", func(w http.ResponseWriter, r *http.Request) {
+			r.Put("/{userID}", func(w http.ResponseWriter, r *http.Request) {
 				organizationUserHandler.UpdateUserRole(w, r)
 			})
 
