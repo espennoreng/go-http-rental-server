@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
+	"github.com/espennoreng/go-http-rental-server/internal/logger"
 	"github.com/espennoreng/go-http-rental-server/internal/middleware"
 	"github.com/espennoreng/go-http-rental-server/internal/services"
 	"github.com/go-chi/chi/v5"
@@ -38,7 +39,7 @@ func TestAccessMiddleware_RequireAdmin_AllowsAdminUser(t *testing.T) {
 		},
 	}
 
-	accessMiddleware := middleware.NewAccessMiddleware(mockSvc)
+	accessMiddleware := middleware.NewAccessMiddleware(mockSvc, logger.NewTestLogger(t))
 	handlerChain := middleware.NewTestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "admin-user"})
 
 	router := chi.NewRouter()
@@ -70,7 +71,7 @@ func TestAccessMiddleware_RequireAdmin_BlocksNonAdminUser(t *testing.T) {
 		},
 	}
 
-	accessMiddleware := middleware.NewAccessMiddleware(mockSvc)
+	accessMiddleware := middleware.NewAccessMiddleware(mockSvc, logger.NewTestLogger(t))
 	handlerChain := middleware.NewTestAuthMiddleware(accessMiddleware.RequireAdmin(finalHandler), auth.Identity{UserID: "non-admin-user"})
 
 	router := chi.NewRouter()

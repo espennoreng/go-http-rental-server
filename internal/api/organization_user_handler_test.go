@@ -100,7 +100,7 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService, logger)
-	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService, logger)
 
 	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.AddUserToOrganization))
 	authedHandler := middleware.NewTestAuthMiddleware(adminProtectedHandler, auth.Identity{UserID: actingUserID})
@@ -160,7 +160,7 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService, logger)
-	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService, logger)
 
 	memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetUsersByOrganizationID))
 	authedHandler := middleware.NewTestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: userID})
@@ -215,7 +215,7 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 
 	r := chi.NewRouter()
 	handler := api.NewOrganizationUserHandler(mockService, logger)
-	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
+	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService, logger)
 
 	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.DeleteUserFromOrganization))
 	authedHandler := middleware.NewTestAuthMiddleware(adminProtectedHandler, auth.Identity{UserID: actingUserID})

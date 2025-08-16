@@ -121,7 +121,7 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 
 		r := chi.NewRouter()
 		handler := api.NewOrganizationHandler(mockService, logger)
-		accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
+		accessMiddleware := middleware.NewAccessMiddleware(mockAccessService, logger)
 
 		memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetOrganizationByID))
 		authedHandler := middleware.NewTestAuthMiddleware(memberProtectedHandler, auth.Identity{UserID: actingUserID})

@@ -55,7 +55,7 @@ func setupRoutes(
 ) {
 
 	authMiddleware := customMiddleware.NewAuthMiddleware(log, verifier, userService, cfg.GoogleOAuthClientID)
-	accessMiddleware := customMiddleware.NewAccessMiddleware(accessService)
+	accessMiddleware := customMiddleware.NewAccessMiddleware(accessService,log)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome to the Rental Server API"))
@@ -80,7 +80,7 @@ func setupRoutes(
 			organizationHandler.CreateOrganization(w, r)
 		})
 
-		r.With(accessMiddleware.RequireMember).Route("/{id}", func(r chi.Router) {
+		r.With(accessMiddleware.RequireMember).Route("/{orgID}", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				organizationHandler.GetOrganizationByID(w, r)
 			})
