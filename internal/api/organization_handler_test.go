@@ -31,10 +31,14 @@ func (m *mockOrganizationService) GetOrganizationByID(ctx context.Context, param
 	return m.getOrganizationByIDFunc(ctx, params)
 }
 
+
 func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 	userID := "test-user-id"
 	newOrgID := "org-001"
 	newOrgName := "New Organization"
+
+	logger := api.NewTestLogger(t)
+
 	t.Run("successful organization creation", func(t *testing.T) {
 
 		mockService := &mockOrganizationService{
@@ -47,7 +51,7 @@ func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewOrganizationHandler(mockService)
+		handler := api.NewOrganizationHandler(mockService, logger)
 
 		authedHandler := middleware.NewTestAuthMiddleware(http.HandlerFunc(handler.CreateOrganization), auth.Identity{UserID: userID})
 		r.Method(http.MethodPost, "/organizations", authedHandler)
@@ -69,7 +73,7 @@ func TestOrganizationHandler_CreateOrganization(t *testing.T) {
 	t.Run("unauthorized", func(t *testing.T) {
 		mockService := &mockOrganizationService{}
 		r := chi.NewRouter()
-		handler := api.NewOrganizationHandler(mockService)
+		handler := api.NewOrganizationHandler(mockService, logger)
 		r.Post("/organizations", handler.CreateOrganization)
 
 		reqBody := fmt.Sprintf(`{"name": "%s"}`, newOrgName)
@@ -86,6 +90,8 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 	actingUserID := "test-acting-user-id"
 	orgID := "org-001"
 	orgName := "Test Organization"
+
+	logger := api.NewTestLogger(t)
 
 	t.Run("successful organization retrieval", func(t *testing.T) {
 		mockService := &mockOrganizationService{
@@ -113,7 +119,7 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 		}
 
 		r := chi.NewRouter()
-		handler := api.NewOrganizationHandler(mockService)
+		handler := api.NewOrganizationHandler(mockService, logger)
 		accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
 		memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetOrganizationByID))
@@ -137,7 +143,7 @@ func TestOrganizationHandler_GetOrganizationByID(t *testing.T) {
 	t.Run("Unauthorized access", func(t *testing.T) {
 		mockService := &mockOrganizationService{}
 		r := chi.NewRouter()
-		handler := api.NewOrganizationHandler(mockService)
+		handler := api.NewOrganizationHandler(mockService, logger)
 
 		r.Get("/organizations/{orgID}", handler.GetOrganizationByID)
 

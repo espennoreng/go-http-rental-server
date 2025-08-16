@@ -9,6 +9,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Env string
+
+const (
+	Development Env = "development"
+	Staging     Env = "staging"
+	Production  Env = "production"
+)
+
 // AppConfig holds the configuration for the application.
 // We use yaml tags to map the YAML keys to our struct fields.
 type AppConfig struct {

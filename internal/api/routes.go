@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/espennoreng/go-http-rental-server/internal/auth"
@@ -18,21 +19,21 @@ type Server struct {
 func NewServer(
 	cfg *config.AppConfig,
 	verifier auth.TokenVerifier,
-
+	log *slog.Logger,
 	userService services.UserService,
 	organizationService services.OrganizationService,
 	organizationUserService services.OrganizationUserService,
 	accessService services.AccessService,
 ) *Server {
-	userHandler := NewUserHandler(userService)
-	organizationHandler := NewOrganizationHandler(organizationService)
-	organizationUserHandler := NewOrganizationUserHandler(organizationUserService)
+	userHandler := NewUserHandler(userService, log)
+	organizationHandler := NewOrganizationHandler(organizationService, log)
+	organizationUserHandler := NewOrganizationUserHandler(organizationUserService, log)
 
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(customMiddleware.NewSlogMiddleware(log))
 
 	setupRoutes(r, cfg, verifier, userService, userHandler, organizationHandler, organizationUserHandler, accessService)
 

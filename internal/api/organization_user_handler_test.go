@@ -58,6 +58,8 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 	const orgID = "org-001"
 	const role = models.RoleMember
 
+	logger := api.NewTestLogger(t)
+
 	mockService := &mockOrganizationUserService{
 		createOrganizationUserFunc: func(ctx context.Context, params services.CreateOrganizationUserParams) (*models.OrganizationUser, error) {
 
@@ -96,7 +98,7 @@ func TestOrganizationUserHandler_AddUserToOrganization(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	handler := api.NewOrganizationUserHandler(mockService)
+	handler := api.NewOrganizationUserHandler(mockService, logger)
 	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
 	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.AddUserToOrganization))
@@ -119,6 +121,8 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 	// Define the organization ID and user ID for the request
 	const orgID = "org-001"
 	const userID = "user-001"
+
+	logger := api.NewTestLogger(t)
 
 	mockService := &mockOrganizationUserService{
 		getUsersByOrganizationIDFunc: func(ctx context.Context, params services.GetUsersByOrganizationIDParams) ([]*models.UserWithRole, error) {
@@ -154,7 +158,7 @@ func TestOrganizationUserHandler_GetUsersByOrganizationID(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	handler := api.NewOrganizationUserHandler(mockService)
+	handler := api.NewOrganizationUserHandler(mockService, logger)
 	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
 	memberProtectedHandler := accessMiddleware.RequireMember(http.HandlerFunc(handler.GetUsersByOrganizationID))
@@ -177,6 +181,8 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 	const actingUserID = "admin-user-007"
 	const userToDeleteID = "member-user-001"
 	const orgID = "org-001"
+
+	logger := api.NewTestLogger(t)
 
 	mockService := &mockOrganizationUserService{
 		deleteUserFromOrganizationFunc: func(ctx context.Context, params services.DeleteOrganizationUserParams) error {
@@ -207,7 +213,7 @@ func TestOrganizationUserHandler_DeleteOrganizationUser(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	handler := api.NewOrganizationUserHandler(mockService)
+	handler := api.NewOrganizationUserHandler(mockService, logger)
 	accessMiddleware := middleware.NewAccessMiddleware(mockAccessService)
 
 	adminProtectedHandler := accessMiddleware.RequireAdmin(http.HandlerFunc(handler.DeleteUserFromOrganization))
